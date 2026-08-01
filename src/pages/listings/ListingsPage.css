@@ -1,0 +1,116 @@
+.listings-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.listings-page__hero {
+  margin-bottom: var(--space-lg);
+}
+
+.listings-page__heading {
+  margin: 0 0 0.4rem 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+.listings-page__subheading {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.listings-page__search-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.listings-page__search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+}
+
+.listings-page__filters-btn {
+  padding: 0.65rem 1.1rem;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.listings-page__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: var(--space-sm);
+}
+
+.listings-page__toolbar h3 {
+  margin: 0;
+}
+
+.listings-page__sort {
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font-size: 0.9rem;
+  max-width: 160px;
+}
+
+.listings-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.listings-page__empty {
+  color: var(--color-text-muted);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .listings-page {
+    padding: 1rem 0.75rem;
+  }
+
+  .listings-page__hero {
+    padding: var(--space-md);
+  }
+
+  .listings-page__heading {
+    font-size: 1.4rem;
+  }
+
+  .listings-page__subheading {
+    font-size: 0.85rem;
+  }
+
+  .listings-page__search-row {
+    flex-direction: column;
+  }
+
+  .listings-page__filters-btn {
+    width: 100%;
+  }
+
+  .listings-page__toolbar {
+    flex-wrap: wrap;
+  }
+
+  .listings-page__grid {
+    grid-template-columns: 1fr;
+  }
+}
