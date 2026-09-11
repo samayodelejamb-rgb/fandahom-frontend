@@ -1,7 +1,28 @@
 import { useState } from "react";
 import "./FilterPanel.css";
 
-const PROPERTY_TYPES = ["Duplex", "Apartment", "Bungalow", "Detached House"];
+const TYPES = [
+  { value: "", label: "Any" },
+  { value: "1", label: "Rent" },
+  { value: "2", label: "Sale" },
+];
+
+const TAGS = [
+  { value: "", label: "Any" },
+  { value: "1", label: "New" },
+  { value: "2", label: "Hot" },
+  { value: "3", label: "Featured" },
+];
+
+export const DEFAULT_FILTERS = {
+  minPrice: "",
+  maxPrice: "",
+  bedrooms: "",
+  bathrooms: "",
+  type: "",
+  tag: "",
+  swimmingPool: false,
+};
 
 function FilterPanel({ filters, onApply, onClear }) {
   const [localFilters, setLocalFilters] = useState(filters);
@@ -16,16 +37,7 @@ function FilterPanel({ filters, onApply, onClear }) {
   };
 
   const handleClear = () => {
-    const cleared = {
-      minPrice: "",
-      maxPrice: "",
-      beds: "",
-      baths: "",
-      minSqm: "",
-      maxSqm: "",
-      propertyType: "",
-    };
-    setLocalFilters(cleared);
+    setLocalFilters(DEFAULT_FILTERS);
     onClear();
   };
 
@@ -53,18 +65,29 @@ function FilterPanel({ filters, onApply, onClear }) {
         </div>
 
         <div className="filter-panel__group">
+          <label>Listing Type</label>
+          <select
+            className="filter-panel__select"
+            value={localFilters.type}
+            onChange={(e) => handleChange("type", e.target.value)}
+          >
+            {TYPES.map((t) => (
+              <option key={t.label} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-panel__group">
           <label>Bedrooms</label>
           <select
             className="filter-panel__select"
-            value={localFilters.beds}
-            onChange={(e) => handleChange("beds", e.target.value)}
+            value={localFilters.bedrooms}
+            onChange={(e) => handleChange("bedrooms", e.target.value)}
           >
             <option value="">Any</option>
-            <option value="1">1+</option>
-            <option value="2">2+</option>
-            <option value="3">3+</option>
-            <option value="4">4+</option>
-            <option value="5">5+</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
           </select>
         </div>
 
@@ -72,50 +95,38 @@ function FilterPanel({ filters, onApply, onClear }) {
           <label>Bathrooms</label>
           <select
             className="filter-panel__select"
-            value={localFilters.baths}
-            onChange={(e) => handleChange("baths", e.target.value)}
+            value={localFilters.bathrooms}
+            onChange={(e) => handleChange("bathrooms", e.target.value)}
           >
             <option value="">Any</option>
-            <option value="1">1+</option>
-            <option value="2">2+</option>
-            <option value="3">3+</option>
-            <option value="4">4+</option>
-            <option value="5">5+</option>
-          </select>
-        </div>
-
-        <div className="filter-panel__group">
-          <label>Property Type</label>
-          <select
-            className="filter-panel__select"
-            value={localFilters.propertyType}
-            onChange={(e) => handleChange("propertyType", e.target.value)}
-          >
-            <option value="">Any</option>
-            {PROPERTY_TYPES.map((type) => (
-              <option key={type} value={type}>{type}</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>{n}</option>
             ))}
           </select>
         </div>
 
         <div className="filter-panel__group">
-          <label>Size (sqm)</label>
-          <div className="filter-panel__range">
+          <label>Tag</label>
+          <select
+            className="filter-panel__select"
+            value={localFilters.tag}
+            onChange={(e) => handleChange("tag", e.target.value)}
+          >
+            {TAGS.map((t) => (
+              <option key={t.label} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-panel__group filter-panel__group--checkbox">
+          <label>
             <input
-              type="number"
-              placeholder="Min"
-              className="filter-panel__input"
-              value={localFilters.minSqm}
-              onChange={(e) => handleChange("minSqm", e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              className="filter-panel__input"
-              value={localFilters.maxSqm}
-              onChange={(e) => handleChange("maxSqm", e.target.value)}
-            />
-          </div>
+              type="checkbox"
+              checked={localFilters.swimmingPool}
+              onChange={(e) => handleChange("swimmingPool", e.target.checked)}
+            />{" "}
+            Has swimming pool
+          </label>
         </div>
       </div>
 

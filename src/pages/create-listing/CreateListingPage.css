@@ -1,0 +1,32 @@
+.create-listing-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-xl) var(--space-md) var(--space-2xl) var(--space-md);
+}
+
+.create-listing-page__title {
+  margin: 0 0 0.3rem 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.create-listing-page__subtitle {
+  margin: 0 0 var(--space-lg) 0;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .create-listing-page {
+    padding: var(--space-lg) var(--space-sm) var(--space-xl) var(--space-sm);
+  }
+
+  .create-listing-page__title {
+    font-size: 1.5rem;
+  }
+
+  .create-listing-page__subtitle {
+    font-size: 0.85rem;
+  }
+}

@@ -14,13 +14,19 @@
   --color-primary-dark: #17337f;
 
   /* Accent: warm gold, for "premium" touches */
-  --color-accent: #d4a017;
+  --color-accent: #c08a1f;
   --color-accent-light: #fbf1dc;
+
+  /* Deep navy, for logo mark / dark buttons / tags */
+  --color-navy: #101c34;
+  --color-navy-dark: #0a1224;
 
   --color-danger: #dc2626;
   --color-danger-light: #fef2f2;
 
   --color-icon-bg: #eef1f6;
+
+  --font-serif: "Playfair Display", Georgia, serif;
 
   /* Spacing */
   --space-xs: 0.4rem;

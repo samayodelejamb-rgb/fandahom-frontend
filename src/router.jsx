@@ -7,18 +7,24 @@ import ForgotPasswordPage from "./pages/auth/ForgotPasswordPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import WishlistPage from "./pages/wishlist/WishlistPage";
 import PropertyDetailPage from "./pages/property-detail/PropertyDetailPage";
+import CreateListingPage from "./pages/create-listing/CreateListingPage";
+import EditListingPage from "./pages/edit-listing/EditListingPage";
+import MyListingsPage from "./pages/my-listings/MyListingsPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 
 const router = createBrowserRouter([
+  // Auth pages — no navbar, standalone
+  { path: "/login", element: <LoginPage /> },
+  { path: "/register", element: <RegisterPage /> },
+  { path: "/forgot-password", element: <ForgotPasswordPage /> },
+
+  // Everything else — wrapped in MainLayout (navbar included)
   {
     element: <MainLayout />,
     children: [
       { path: "/", element: <ListingsPage /> },
       { path: "/property/:id", element: <PropertyDetailPage /> },
-      { path: "/login", element: <LoginPage /> },
-      { path: "/register", element: <RegisterPage /> },
-      { path: "/forgot-password", element: <ForgotPasswordPage /> },
       {
         path: "/profile",
         element: (
@@ -32,6 +38,30 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <WishlistPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/create-listing",
+        element: (
+          <ProtectedRoute>
+            <CreateListingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/edit-listing/:id",
+        element: (
+          <ProtectedRoute>
+            <EditListingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/my-listings",
+        element: (
+          <ProtectedRoute>
+            <MyListingsPage />
           </ProtectedRoute>
         ),
       },

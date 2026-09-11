@@ -22,35 +22,39 @@ function Navbar() {
   };
 
   return (
-    <header className="navbar">
-      <Link to="/" className="navbar__logo">
-        <Home size={22} strokeWidth={2} />
-        <span>Fandahom</span>
-      </Link>
-
-      <form className="navbar__search-wrapper" onSubmit={handleSearchSubmit}>
-        <input
-          type="text"
-          placeholder="Search by location, property name..."
-          className="navbar__search"
-          value={searchValue}
-          onChange={(e) => setSearchValue(e.target.value)}
-        />
-        <button type="submit" className="navbar__search-btn" aria-label="Search">
-          <Search size={18} />
-        </button>
-      </form>
-
-      <div className="navbar__actions">
-        <Link to="/wishlist" onClick={handleHeartClick} className="navbar__icon-link">
-          <Heart size={24} strokeWidth={1.5} />
+    <div className="navbar-wrap">
+      <header className="navbar">
+        <Link to="/" className="navbar__logo" aria-label="Fandahom home">
+          <span className="navbar__logo-icon">
+            <Home size={18} strokeWidth={2.2} />
+          </span>
+          <span>Fandahom</span>
         </Link>
 
-        <Link to={isAuthenticated ? "/profile" : "/login"} className="navbar__icon-link">
-          <CircleUserRound size={28} strokeWidth={1.5} />
-        </Link>
-      </div>
-    </header>
+        <form className="navbar__search-wrapper" onSubmit={handleSearchSubmit}>
+          <input
+            type="text"
+            placeholder="Search by location, property name..."
+            className="navbar__search"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+          />
+          <button type="submit" className="navbar__search-btn" aria-label="Search">
+            <Search size={18} />
+          </button>
+        </form>
+
+        <div className="navbar__actions">
+          <Link to="/wishlist" onClick={handleHeartClick} className="navbar__icon-link">
+            <Heart size={22} strokeWidth={1.5} />
+          </Link>
+
+          <Link to={isAuthenticated ? "/profile" : "/login"} className="navbar__icon-link">
+            <CircleUserRound size={24} strokeWidth={1.5} />
+          </Link>
+        </div>
+      </header>
+    </div>
   );
 }
 

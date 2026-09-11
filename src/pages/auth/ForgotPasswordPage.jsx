@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import "./auth.css";
+import { Home } from "lucide-react";
+import "./split-auth.css";
+
+const HERO_IMAGE = "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200";
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -10,7 +13,6 @@ function ForgotPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     setTimeout(() => {
       setLoading(false);
       setSubmitted(true);
@@ -18,36 +20,51 @@ function ForgotPasswordPage() {
   };
 
   return (
-    <div className="auth-page">
-      <h2 className="auth-page__title">Reset your password</h2>
+    <div className="split-auth">
+      <div className="split-auth__form-side">
+        <div className="split-auth__form-wrapper">
+          <Link to="/" className="split-auth__logo">
+            <Home size={22} strokeWidth={2} />
+            Fandahom
+          </Link>
 
-      {submitted ? (
-        <p className="auth-page__hint">
-          If an account exists for <strong>{email}</strong>, a password reset
-          link has been sent.
-        </p>
-      ) : (
-        <form onSubmit={handleSubmit} className="auth-page__form">
-          <p className="auth-page__hint">
-            Enter your email and we'll send you a link to reset your password.
+          <h1 className="split-auth__title">Reset your password</h1>
+
+          {submitted ? (
+            <p style={{ fontSize: "0.9rem", color: "var(--color-text-secondary)" }}>
+              If an account exists for <strong>{email}</strong>, a password reset link has been sent.
+            </p>
+          ) : (
+            <form onSubmit={handleSubmit} className="split-auth__form">
+              <p style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)", margin: "0 0 0.5rem 0" }}>
+                Enter your email and we'll send you a link to reset your password.
+              </p>
+              <div>
+                <label className="split-auth__label">Email Address <span className="required">*</span></label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="split-auth__input"
+                />
+              </div>
+              <button type="submit" disabled={loading} className="split-auth__submit-btn">
+                {loading ? "Sending..." : "Send Reset Link"}
+              </button>
+            </form>
+          )}
+
+          <p className="split-auth__footer-text">
+            <Link to="/login">Back to login</Link>
           </p>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="auth-page__input"
-          />
-          <button type="submit" disabled={loading} className="auth-page__submit-btn">
-            {loading ? "Sending..." : "Send Reset Link"}
-          </button>
-        </form>
-      )}
+        </div>
+      </div>
 
-      <p className="auth-page__footer-text">
-        <Link to="/login">Back to login</Link>
-      </p>
+      <div
+        className="split-auth__image-side"
+        style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+      />
     </div>
   );
 }

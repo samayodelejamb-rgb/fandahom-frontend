@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Home } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import "./auth.css";
+import "./split-auth.css";
+
+const HERO_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -31,40 +34,76 @@ function LoginPage() {
   };
 
   return (
-    <div className="auth-page">
-      <h2 className="auth-page__title">Log in to Fandahom</h2>
+    <div className="split-auth">
+      <div className="split-auth__form-side">
+        <div className="split-auth__form-wrapper">
+          <Link to="/" className="split-auth__logo">
+            <Home size={22} strokeWidth={2} />
+            Fandahom
+          </Link>
 
-      <form onSubmit={handleSubmit} className="auth-page__form">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="auth-page__input"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="auth-page__input"
-        />
+          <h1 className="split-auth__title">Sign in</h1>
 
-        {error && <p className="auth-page__error">{error}</p>}
+          <form onSubmit={handleSubmit} className="split-auth__form">
+            <div>
+              <label className="split-auth__label">
+                Email Address <span className="required">*</span>
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="split-auth__input"
+              />
+            </div>
 
-        <button type="submit" disabled={loading} className="auth-page__submit-btn">
-          {loading ? "Logging in..." : "Log In"}
-        </button>
-      </form>
+            <div>
+              <label className="split-auth__label">
+                Password <span className="required">*</span>
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="split-auth__input"
+              />
+            </div>
 
-      <p className="auth-page__footer-text">
-        Don't have an account? <Link to="/register">Create one</Link>
-      </p>
-      <p className="auth-page__footer-text">
-        <Link to="/forgot-password">Forgot password?</Link>
-      </p>
+            {error && <p className="split-auth__error">{error}</p>}
+
+            <button type="submit" disabled={loading} className="split-auth__submit-btn">
+              {loading ? "Signing in..." : "Continue"}
+            </button>
+          </form>
+
+          <p className="split-auth__footer-text">
+            New to Fandahom? <Link to="/register">Create account</Link>
+          </p>
+
+          <div className="split-auth__divider">OR</div>
+
+          <button type="button" className="split-auth__social-btn" disabled title="Coming soon">
+            Continue with Google
+          </button>
+          <button type="button" className="split-auth__social-btn" disabled title="Coming soon">
+            Continue with Apple
+          </button>
+          <button type="button" className="split-auth__social-btn" disabled title="Coming soon">
+            Continue with Facebook
+          </button>
+
+          <p className="split-auth__footer-text">
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
+        </div>
+      </div>
+
+      <div
+        className="split-auth__image-side"
+        style={{ backgroundImage: `url(${HERO_IMAGE})` }}
+      />
     </div>
   );
 }

@@ -1,71 +1,103 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
   BedDouble,
   Bath,
-  Ruler,
-  ChevronLeft,
-  ChevronRight,
   MapPinned,
   MessageCircle,
-  Phone,
-  CheckCircle2,
-  Home,
-  Sofa,
   Calendar,
-  ClipboardList,
-  BadgeCheck,
+  Tag,
 } from "lucide-react";
-import { mockProperties } from "../../mocks/mockProperties";
+import { fetchListing, fetchListings } from "../../services/listingApi";
+import PropertyCard from "../../components/property/PropertyCard";
 import "./PropertyDetailPage.css";
 
-const DETAIL_ICON_MAP = {
-  propertyType: Home,
-  size: Ruler,
-  tenure: ClipboardList,
-  status: BadgeCheck,
-  furnished: Sofa,
-  yearBuilt: Calendar,
-};
+const TYPE_LABELS = { 1: "For Rent", 2: "For Sale" };
+const TAG_LABELS = { 1: "New", 2: "Hot", 3: "Featured" };
 
-const DETAIL_LABELS = {
-  propertyType: "Property Type",
-  size: "Property Size",
-  tenure: "Tenure",
-  status: "Status",
-  furnished: "Furnished",
-  yearBuilt: "Year Built",
-};
+// Demo-only stock photo, assigned deterministically per listing id.
+// NOT the listing's real photo — real media requires the
+// /media/init -> S3 -> /media/confirm flow, which isn't built yet.
+const DEMO_PHOTOS = [
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200",
+  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200",
+  "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200",
+  "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200",
+  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
+  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200",
+];
+
+function getDemoPhoto(id) {
+  return DEMO_PHOTOS[id % DEMO_PHOTOS.length];
+}
 
 function PropertyDetailPage() {
   const { id } = useParams();
-  const property = mockProperties.find((p) => p.id === Number(id));
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [listing, setListing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [similarListings, setSimilarListings] = useState([]);
 
-  if (!property) {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await fetchListing(id);
+        if (!cancelled) setListing(data);
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  // Load "Similar Listings" — same type (Rent/Sale) as the current
+  // listing, excluding itself. Runs after the main listing is known.
+  useEffect(() => {
+    if (!listing) return;
+    let cancelled = false;
+
+    async function loadSimilar() {
+      try {
+        const data = await fetchListings({ type: listing.type, limit: 5 });
+        if (!cancelled) {
+          setSimilarListings(data.listings.filter((l) => l.id !== listing.id).slice(0, 4));
+        }
+      } catch {
+        // Non-critical section — fail quietly rather than blocking the page.
+        if (!cancelled) setSimilarListings([]);
+      }
+    }
+
+    loadSimilar();
+    return () => {
+      cancelled = true;
+    };
+  }, [listing]);
+
+  if (loading) {
+    return <p style={{ padding: "3rem", textAlign: "center" }}>Loading listing...</p>;
+  }
+
+  if (error || !listing) {
     return (
       <div style={{ padding: "3rem", textAlign: "center" }}>
-        <p>Property not found.</p>
+        <p>{error || "Listing not found."}</p>
         <Link to="/">Back to Listings</Link>
       </div>
     );
   }
-
-  const media = [
-    ...property.images.map((src) => ({ type: "image", src })),
-    ...(property.videos || []).map((src) => ({ type: "video", src })),
-  ];
-
-  const MAX_VISIBLE_THUMBS = 5;
-  const visibleThumbs = media.slice(0, MAX_VISIBLE_THUMBS);
-  const remainingCount = media.length - MAX_VISIBLE_THUMBS;
-
-  const goPrev = () => setActiveIndex((i) => (i === 0 ? media.length - 1 : i - 1));
-  const goNext = () => setActiveIndex((i) => (i === media.length - 1 ? 0 : i + 1));
-
-  const activeMedia = media[activeIndex];
 
   return (
     <div className="pd-page">
@@ -75,84 +107,42 @@ function PropertyDetailPage() {
 
       <div className="pd-page__layout">
         <div className="pd-page__left">
-          {/* Gallery */}
+          {/* Media upload isn't wired up yet — this is a deterministic
+              demo photo, not the listing's real photo. Will be replaced
+              once the /media/init -> S3 -> /media/confirm flow is built. */}
           <div className="pd-gallery">
             <div className="pd-gallery__main">
-              {activeMedia.type === "video" ? (
-                <video src={activeMedia.src} controls />
-              ) : (
-                <img src={activeMedia.src} alt={property.title} />
-              )}
-              <span className="pd-gallery__counter">{activeIndex + 1} / {media.length}</span>
-              {media.length > 1 && (
-                <>
-                  <button className="pd-gallery__nav-btn pd-gallery__nav-btn--prev" onClick={goPrev} aria-label="Previous">
-                    <ChevronLeft size={18} />
-                  </button>
-                  <button className="pd-gallery__nav-btn pd-gallery__nav-btn--next" onClick={goNext} aria-label="Next">
-                    <ChevronRight size={18} />
-                  </button>
-                </>
-              )}
+              <img src={getDemoPhoto(listing.id)} alt={listing.title} />
             </div>
-
-            {media.length > 1 && (
-              <div className="pd-gallery__thumbs">
-                {visibleThumbs.map((item, index) => {
-                  const isLastVisible = index === MAX_VISIBLE_THUMBS - 1 && remainingCount > 0;
-                  return (
-                    <div
-                      key={index}
-                      className={`pd-gallery__thumb ${activeIndex === index ? "pd-gallery__thumb--active" : ""}`}
-                      onClick={() => setActiveIndex(index)}
-                    >
-                      {item.type === "video" ? (
-                        <video src={item.src} muted />
-                      ) : (
-                        <img src={item.src} alt={`${property.title} ${index + 1}`} />
-                      )}
-                      {isLastVisible && (
-                        <div className="pd-gallery__thumb-overlay">+{remainingCount}</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
-          {/* Property Details */}
+          {/* Property Details — only fields that actually exist on the
+              real Listing object */}
           <div className="pd-panel pd-details-panel">
             <h3 className="pd-panel__title">Property Details</h3>
             <div className="pd-details-grid">
-              {Object.entries(property.details).map(([key, value]) => {
-                if (key === "bedrooms" || key === "bathrooms") return null;
-                const Icon = DETAIL_ICON_MAP[key] || Home;
-                const label = DETAIL_LABELS[key] || key;
-                return (
-                  <div className="pd-detail-item" key={key}>
-                    <span className="pd-detail-item__icon">
-                      <Icon size={18} />
-                    </span>
-                    <div>
-                      <p className="pd-detail-item__label">{label}</p>
-                      <p className="pd-detail-item__value">{value}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Amenities */}
-          <div className="pd-panel pd-amenities-panel">
-            <h3 className="pd-panel__title">Features & Amenities</h3>
-            <div className="pd-amenities">
-              {property.amenities.map((item) => (
-                <span key={item} className="pd-amenity-tag">
-                  <CheckCircle2 size={14} /> {item}
-                </span>
-              ))}
+              <div className="pd-detail-item">
+                <p className="pd-detail-item__label">Listing Type</p>
+                <p className="pd-detail-item__value">{TYPE_LABELS[listing.type] || "—"}</p>
+              </div>
+              {listing.tag && (
+                <div className="pd-detail-item">
+                  <p className="pd-detail-item__label">Tag</p>
+                  <p className="pd-detail-item__value">{TAG_LABELS[listing.tag]}</p>
+                </div>
+              )}
+              <div className="pd-detail-item">
+                <p className="pd-detail-item__label">Swimming Pool</p>
+                <p className="pd-detail-item__value">{listing.swimming_pool ? "Yes" : "No"}</p>
+              </div>
+              {listing.created_at && (
+                <div className="pd-detail-item">
+                  <p className="pd-detail-item__label">Listed On</p>
+                  <p className="pd-detail-item__value">
+                    {new Date(listing.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -160,45 +150,35 @@ function PropertyDetailPage() {
           <div className="pd-panel pd-location-panel">
             <h3 className="pd-panel__title">Location</h3>
             <div className="pd-map-placeholder">Map view coming soon</div>
-            <p style={{ fontWeight: 600, margin: "0 0 0.25rem 0" }}>{property.location_map.address}</p>
-            <p style={{ color: "var(--color-text-secondary)", fontSize: "0.85rem", margin: 0 }}>
-              {property.location_map.note}
-            </p>
-          </div>
-
-          {/* Nearby Places */}
-          <div className="pd-panel pd-nearby-panel">
-            <h3 className="pd-panel__title">Nearby Places</h3>
-            <div className="pd-nearby-grid">
-              {property.nearbyPlaces.map((place) => (
-                <div className="pd-nearby-item" key={place.name}>
-                  <span className="pd-nearby-item__icon">
-                    <MapPinned size={16} />
-                  </span>
-                  <div>
-                    <p className="pd-nearby-item__name">{place.name}</p>
-                    <p className="pd-nearby-item__distance">{place.distance}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <p style={{ fontWeight: 600, margin: 0 }}>{listing.address}</p>
           </div>
         </div>
 
         <div className="pd-page__right">
           {/* Info + actions */}
           <div className="pd-panel pd-info-panel">
-            <span className="pd-info__tag">{property.status}</span>
-            <h1 className="pd-info__title">{property.title}</h1>
+            <span className="pd-info__tag">{TYPE_LABELS[listing.type] || "Listing"}</span>
+            {listing.tag && (
+              <span className="pd-info__tag pd-info__tag--secondary">
+                <Tag size={12} /> {TAG_LABELS[listing.tag]}
+              </span>
+            )}
+            <h1 className="pd-info__title">{listing.title}</h1>
             <p className="pd-info__location">
-              <MapPin size={16} /> {property.location}
+              <MapPin size={16} /> {listing.address}
             </p>
-            <p className="pd-info__price">₦{property.price.toLocaleString()}</p>
+            <p className="pd-info__price">₦{listing.price.toLocaleString()}</p>
 
             <div className="pd-info__stats">
-              <span className="pd-info__stat"><BedDouble size={16} /> {property.beds} Beds</span>
-              <span className="pd-info__stat"><Bath size={16} /> {property.baths} Baths</span>
-              <span className="pd-info__stat"><Ruler size={16} /> {property.sqm} sqm</span>
+              {listing.bedrooms != null && (
+                <span className="pd-info__stat"><BedDouble size={16} /> {listing.bedrooms} Beds</span>
+              )}
+              {listing.bathrooms != null && (
+                <span className="pd-info__stat"><Bath size={16} /> {listing.bathrooms} Baths</span>
+              )}
+              {listing.created_at && (
+                <span className="pd-info__stat"><Calendar size={16} /> {new Date(listing.created_at).toLocaleDateString()}</span>
+              )}
             </div>
 
             <div className="pd-info__actions">
@@ -211,44 +191,26 @@ function PropertyDetailPage() {
             </div>
           </div>
 
-          {/* Agent */}
-          <div className="pd-panel pd-agent-panel">
-            <h3 className="pd-panel__title">Listed by</h3>
-            <div className="pd-agent__row">
-              <img src={property.agent.photo} alt={property.agent.name} className="pd-agent__avatar" />
-              <div>
-                <p className="pd-agent__name">{property.agent.name}</p>
-                <p className="pd-agent__role">{property.agent.role}</p>
-                {property.agent.verified && (
-                  <span className="pd-agent__verified">
-                    <BadgeCheck size={14} /> Verified Agent
-                  </span>
-                )}
-              </div>
+          {/* Description */}
+          {listing.description && (
+            <div className="pd-panel pd-description-panel">
+              <h3 className="pd-panel__title">Description</h3>
+              <p className="pd-description">{listing.description}</p>
             </div>
-
-            <p className="pd-agent__contact">
-              <Phone size={14} /> {property.agent.phone}
-            </p>
-            <p className="pd-agent__contact">{property.agent.email}</p>
-
-            <div className="pd-agent__actions">
-              <button className="pd-btn pd-btn--outline">
-                <Phone size={16} /> Call Agent
-              </button>
-              <button className="pd-btn pd-btn--primary">
-                <MessageCircle size={16} /> WhatsApp
-              </button>
-            </div>
-          </div>
-
-          {/* Description — its own panel so we can position it independently on mobile */}
-          <div className="pd-panel pd-description-panel">
-            <h3 className="pd-panel__title">Description</h3>
-            <p className="pd-description">{property.description}</p>
-          </div>
+          )}
         </div>
       </div>
+
+      {similarListings.length > 0 && (
+        <div className="pd-similar">
+          <h3 className="pd-similar__title">Similar Listings</h3>
+          <div className="pd-similar__grid">
+            {similarListings.map((item) => (
+              <PropertyCard key={item.id} listing={item} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
