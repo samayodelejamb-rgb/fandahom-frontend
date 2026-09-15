@@ -56,14 +56,19 @@ export function AuthProvider({ children }) {
     })();
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (email, password, pendingWishlistId) => {
     const loggedInUser = await loginRequest({ email, password });
+    let wl = loadWishlist(loggedInUser.id);
+    if (pendingWishlistId && !wl.includes(pendingWishlistId)) {
+      wl = [...wl, pendingWishlistId];
+      saveWishlist(loggedInUser.id, wl);
+    }
     setUser(loggedInUser);
-    setWishlist(loadWishlist(loggedInUser.id));
+    setWishlist(wl);
     return loggedInUser;
   };
 
-  const register = async ({ firstname, lastname, email, password, passwordConfirmation }) => {
+  const register = async ({ firstname, lastname, email, password, passwordConfirmation }, pendingWishlistId) => {
     const newUser = await registerRequest({
       firstname,
       lastname,
@@ -73,8 +78,13 @@ export function AuthProvider({ children }) {
     });
     // Our mock backend auto-logs-in on register (matches typical real
     // backend behaviour, but confirm this with your backend dev).
+    let wl = [];
+    if (pendingWishlistId) {
+      wl = [pendingWishlistId];
+      saveWishlist(newUser.id, wl);
+    }
     setUser(newUser);
-    setWishlist([]);
+    setWishlist(wl);
     return newUser;
   };
 

@@ -16,7 +16,10 @@ function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const redirectTo = location.state?.from || "/";
+  const pendingWishlistId = location.state?.pendingWishlistId;
+  const redirectTo = pendingWishlistId
+    ? `/property/${pendingWishlistId}`
+    : location.state?.from || "/";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +27,7 @@ function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, pendingWishlistId);
       navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message);
@@ -38,7 +41,9 @@ function LoginPage() {
       <div className="split-auth__form-side">
         <div className="split-auth__form-wrapper">
           <Link to="/" className="split-auth__logo">
-            <Home size={22} strokeWidth={2} />
+            <span className="split-auth__logo-icon">
+              <Home size={18} strokeWidth={2.2} />
+            </span>
             Fandahom
           </Link>
 
@@ -79,7 +84,8 @@ function LoginPage() {
           </form>
 
           <p className="split-auth__footer-text">
-            New to Fandahom? <Link to="/register">Create account</Link>
+            New to Fandahom?{" "}
+            <Link to="/register" state={{ pendingWishlistId }}>Create account</Link>
           </p>
 
           <div className="split-auth__divider">OR</div>

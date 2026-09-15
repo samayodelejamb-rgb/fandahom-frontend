@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Heart, MapPin, BedDouble, Bath } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import "./PropertyCard.css";
@@ -25,12 +25,16 @@ function getDemoPhoto(id) {
 
 function PropertyCard({ listing }) {
   const { isAuthenticated, wishlist, toggleWishlist } = useAuth();
+  const navigate = useNavigate();
   const isSaved = wishlist?.includes(listing.id);
 
   const handleHeartClick = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      window.location.href = "/login";
+      // Carry which property they were trying to save, so after they
+      // sign in/register we can save it automatically and drop them
+      // straight on that listing instead of a generic page.
+      navigate("/login", { state: { pendingWishlistId: listing.id } });
       return;
     }
     toggleWishlist(listing.id);

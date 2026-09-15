@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Home } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import TermsModal from "../../components/common/TermsModal";
@@ -31,6 +31,8 @@ function RegisterPage() {
 
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const pendingWishlistId = location.state?.pendingWishlistId;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,14 +53,17 @@ function RegisterPage() {
 
     setLoading(true);
     try {
-      await register({
-        firstname,
-        lastname,
-        email,
-        password,
-        passwordConfirmation: confirmPassword,
-      });
-      navigate("/");
+      await register(
+        {
+          firstname,
+          lastname,
+          email,
+          password,
+          passwordConfirmation: confirmPassword,
+        },
+        pendingWishlistId
+      );
+      navigate(pendingWishlistId ? `/property/${pendingWishlistId}` : "/");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -71,7 +76,9 @@ function RegisterPage() {
       <div className="split-auth__form-side">
         <div className="split-auth__form-wrapper">
           <Link to="/" className="split-auth__logo">
-            <Home size={22} strokeWidth={2} />
+            <span className="split-auth__logo-icon">
+              <Home size={18} strokeWidth={2.2} />
+            </span>
             Fandahom
           </Link>
 
@@ -162,7 +169,7 @@ function RegisterPage() {
           </form>
 
           <p className="split-auth__footer-text">
-            Already have an account? <Link to="/login">Sign in</Link>
+            Already have an account? <Link to="/login" state={{ pendingWishlistId }}>Sign in</Link>
           </p>
 
           <div className="split-auth__divider">OR</div>
