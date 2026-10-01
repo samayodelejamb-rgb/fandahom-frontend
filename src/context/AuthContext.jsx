@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { setUnauthorizedHandler } from "../services/apiClient";
 import {
   fetchCsrfToken,
   fetchCurrentUser,
@@ -35,6 +36,17 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // If the backend says "401" while someone is using the app (their
+  // session expired), sign them out locally. ProtectedRoute then sends
+  // them to the login page.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      setWishlist([]);
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   // On first load: get a CSRF token, then ask the backend who (if anyone)
   // is currently logged in via the session cookie. This replaces the old

@@ -12,30 +12,16 @@ import {
 } from "lucide-react";
 import { fetchListing, fetchListings } from "../../services/listingApi";
 import PropertyCard from "../../components/property/PropertyCard";
+import { getGalleryImages } from "../../utils/listingImages";
 import "./PropertyDetailPage.css";
 
 const TYPE_LABELS = { 1: "For Rent", 2: "For Sale" };
 const TAG_LABELS = { 1: "New", 2: "Hot", 3: "Featured" };
 
-// Demo-only stock photo, assigned deterministically per listing id.
-// NOT the listing's real photo — real media requires the
-// /media/init -> S3 -> /media/confirm flow, which isn't built yet.
-const DEMO_PHOTOS = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200",
-  "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1200",
-  "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=1200",
-  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200",
-  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200",
-];
-
-function getDemoPhoto(id) {
-  return DEMO_PHOTOS[id % DEMO_PHOTOS.length];
-}
-
 function PropertyDetailPage() {
   const { id } = useParams();
   const [listing, setListing] = useState(null);
+  const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [similarListings, setSimilarListings] = useState([]);
@@ -48,7 +34,10 @@ function PropertyDetailPage() {
       setError("");
       try {
         const data = await fetchListing(id);
-        if (!cancelled) setListing(data);
+        if (!cancelled) {
+          setListing(data);
+          setActivePhoto(0);
+        }
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
@@ -99,6 +88,8 @@ function PropertyDetailPage() {
     );
   }
 
+  const photos = getGalleryImages(listing);
+
   return (
     <div className="pd-page">
       <Link to="/" className="pd-page__back">
@@ -107,13 +98,26 @@ function PropertyDetailPage() {
 
       <div className="pd-page__layout">
         <div className="pd-page__left">
-          {/* Media upload isn't wired up yet — this is a deterministic
-              demo photo, not the listing's real photo. Will be replaced
-              once the /media/init -> S3 -> /media/confirm flow is built. */}
+          {/* Real uploaded photos (see src/utils/listingImages.js). */}
           <div className="pd-gallery">
             <div className="pd-gallery__main">
-              <img src={getDemoPhoto(listing.id)} alt={listing.title} />
+              <img src={photos[activePhoto] || photos[0]} alt={listing.title} />
             </div>
+            {photos.length > 1 && (
+              <div className="pd-gallery__thumbs">
+                {photos.map((url, i) => (
+                  <button
+                    key={`${i}-${url}`}
+                    type="button"
+                    className={`pd-gallery__thumb ${i === activePhoto ? "pd-gallery__thumb--active" : ""}`}
+                    onClick={() => setActivePhoto(i)}
+                    aria-label={`Show photo ${i + 1}`}
+                  >
+                    <img src={url} alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Property Details — only fields that actually exist on the

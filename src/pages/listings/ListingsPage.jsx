@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MapPin, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
-import { fetchListings } from "../../services/listingApi";
+import { fetchAllListings } from "../../services/listingApi";
 import PropertyCard from "../../components/property/PropertyCard";
 import FilterPanel, { DEFAULT_FILTERS } from "../../components/property/FilterPanel";
 import "./ListingsPage.css";
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1400";
 const PAGE_SIZE = 12; // 3 rows of 4 on desktop
-const FETCH_LIMIT = 100; // backend's documented max per request
 
 function ListingsPage() {
   const [searchParams] = useSearchParams();
@@ -42,7 +41,7 @@ function ListingsPage() {
     setLoading(true);
     setError("");
     try {
-      const data = await fetchListings({
+      const data = await fetchAllListings({
         q: searchTerm || undefined,
         type: appliedFilters.type || undefined,
         tag: appliedFilters.tag || undefined,
@@ -51,7 +50,6 @@ function ListingsPage() {
         bedrooms: appliedFilters.bedrooms || undefined,
         bathrooms: appliedFilters.bathrooms || undefined,
         swimming_pool: appliedFilters.swimmingPool ? "true" : undefined,
-        limit: FETCH_LIMIT,
       });
 
       setAllListings(sortListings(data.listings, sortBy));
@@ -166,9 +164,9 @@ function ListingsPage() {
           <p className="listings-page__empty">No properties match your search.</p>
         ) : (
           <>
-            {serverTotal > FETCH_LIMIT && (
+            {serverTotal > allListings.length && (
               <p className="listings-page__limit-note">
-                Showing the first {FETCH_LIMIT} of {serverTotal} results. Narrow your
+                Showing the first {allListings.length} of {serverTotal} results. Narrow your
                 search or filters to see more specific matches.
               </p>
             )}

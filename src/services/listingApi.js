@@ -79,3 +79,63 @@ export async function fetchMyListings(params = {}) {
   const data = await apiRequest(`/listing/mine/${qs ? `?${qs}` : ""}`);
   return data; // { listings, meta }
 }
+
+
+// ---------------------------------------------------------------------
+// Fetch ALL pages (per the doc: `page`, `limit` max 100, and `meta.total_pages`)
+// ---------------------------------------------------------------------
+// The doc has no sort parameter, and the app sorts (newest / price) in the
+// browser. Sorting only works if we have the whole result set, so these
+// helpers read page 1, then fetch the remaining pages the doc's `meta`
+// says exist. MAX_PAGES is a safety cap (10 pages = 1000 listings).
+const PAGE_LIMIT = 100; // the doc's maximum per request
+const MAX_PAGES = 10;
+
+async function collectAllPages(fetchPage, params) {
+  const first = await fetchPage({ ...params, limit: PAGE_LIMIT, page: 1 });
+  const listings = [...first.listings];
+
+  const totalPages = Math.min(first.meta?.total_pages ?? 1, MAX_PAGES);
+  if (totalPages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        fetchPage({ ...params, limit: PAGE_LIMIT, page: i + 2 })
+      )
+    );
+    rest.forEach((r) => listings.push(...r.listings));
+  }
+
+  // meta.total is still the server's real total, so the UI can tell the
+  // user when the safety cap cut the list short.
+  return { listings, meta: first.meta };
+}
+
+/** Browse/search, across every page. Same filters as fetchListings. */
+export function fetchAllListings(params = {}) {
+  return collectAllPages(fetchListings, params);
+}
+
+/** The signed-in user's listings, across every page. */
+export function fetchAllMyListings(params = {}) {
+  return collectAllPages(fetchMyListings, params);
+}
+
+/**
+ * Publish a listing: DRAFT or UNPUBLISHED -> PUBLISHED.
+ * Caller must be the owner. The listing needs at least one image whose
+ * media state is "ready", otherwise the backend answers 409
+ * ("No ready image attached — cannot publish yet").
+ */
+export async function publishListing(id) {
+  const data = await apiRequest(`/listing/${id}/publish/`, { method: "POST" });
+  return data.listing;
+}
+
+/**
+ * Unpublish a listing: PUBLISHED -> UNPUBLISHED.
+ * The listing disappears from public browse but the owner can still see it.
+ */
+export async function unpublishListing(id) {
+  const data = await apiRequest(`/listing/${id}/unpublish/`, { method: "POST" });
+  return data.listing;
+}

@@ -1,27 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Heart, MapPin, BedDouble, Bath } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { getCoverImage } from "../../utils/listingImages";
 import "./PropertyCard.css";
 
 const TYPE_LABELS = { 1: "For Rent", 2: "For Sale" };
 const TAG_LABELS = { 1: "New", 2: "Hot", 3: "Featured" };
-
-// Demo-only stock photos, assigned deterministically per listing id.
-// These are NOT the listing's real photos — real per-listing media
-// requires the /media/init -> S3 -> /media/confirm flow, which isn't
-// built yet. Swap this out once that exists.
-const DEMO_PHOTOS = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600",
-  "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=600",
-  "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=600",
-  "https://images.unsplash.com/photo-1613977257363-707ba9348227?w=600",
-  "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600",
-  "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600",
-];
-
-function getDemoPhoto(id) {
-  return DEMO_PHOTOS[id % DEMO_PHOTOS.length];
-}
 
 function PropertyCard({ listing }) {
   const { isAuthenticated, wishlist, toggleWishlist } = useAuth();
@@ -44,7 +28,7 @@ function PropertyCard({ listing }) {
     <Link to={`/property/${listing.id}`} className="property-card">
       <div className="property-card__image-wrapper">
         <img
-          src={getDemoPhoto(listing.id)}
+          src={getCoverImage(listing)}
           alt={listing.title}
           className="property-card__image"
         />

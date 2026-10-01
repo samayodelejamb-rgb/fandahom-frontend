@@ -3,9 +3,23 @@
 // mutating requests, and turning error responses into thrown Errors
 // so calling code can just try/catch.
 
-const BASE_URL = "http://localhost:8000";
+import { API_BASE_URL as BASE_URL } from "../config";
 
 let csrfToken = null;
+
+// The doc's 401 means "not logged in". When the session expires while the
+// user is using the app, any request can come back 401. AuthContext
+// registers a function here that signs the user out locally, and the
+// protected pages then send them to the login screen.
+let unauthorizedHandler = null;
+
+export function setUnauthorizedHandler(fn) {
+  unauthorizedHandler = fn;
+}
+
+// For these endpoints a 401 is a normal answer (e.g. wrong password on
+// login), not an expired session, so they must NOT trigger the handler.
+const AUTH_PATHS = ["/core/auth/login", "/core/auth/register", "/core/auth/logout"];
 
 /**
  * Fetches a CSRF token from the backend and caches it in memory.
@@ -55,6 +69,13 @@ export async function apiRequest(path, { method = "GET", body, isJson = true } =
   // 204/empty body responses (e.g. logout, delete) won't have JSON to parse.
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};
+
+  if (res.status === 401 && !AUTH_PATHS.includes(path)) {
+    if (unauthorizedHandler) unauthorizedHandler();
+    const error = new Error("Please log in to continue.");
+    error.status = 401;
+    throw error;
+  }
 
   if (!res.ok) {
     const message = data?.error || `Request failed with status ${res.status}`;

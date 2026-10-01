@@ -10,6 +10,7 @@ import PropertyDetailPage from "./pages/property-detail/PropertyDetailPage";
 import CreateListingPage from "./pages/create-listing/CreateListingPage";
 import EditListingPage from "./pages/edit-listing/EditListingPage";
 import MyListingsPage from "./pages/my-listings/MyListingsPage";
+import ListingMediaPage from "./pages/listing-media/ListingMediaPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -54,6 +55,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <EditListingPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/listing-media/:id",
+        element: (
+          <ProtectedRoute>
+            <ListingMediaPage />
           </ProtectedRoute>
         ),
       },
