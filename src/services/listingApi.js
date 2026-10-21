@@ -81,6 +81,17 @@ export async function fetchMyListings(params = {}) {
 }
 
 
+/**
+ * GET /listing/<id>/media/ — every media item (images + videos) attached
+ * to a listing. The owner sees items in ANY state (so the upload page can
+ * show per-file processing progress); everyone else sees only "ready" ones.
+ * Non-ready items have url: null.
+ */
+export async function fetchListingMedia(id) {
+  const data = await apiRequest(`/listing/${id}/media/`);
+  return data.media; // array
+}
+
 // ---------------------------------------------------------------------
 // Fetch ALL pages (per the doc: `page`, `limit` max 100, and `meta.total_pages`)
 // ---------------------------------------------------------------------

@@ -1,0 +1,97 @@
+/* PropertyCard — desktop side panel card */
+
+.re-pm-card {
+  background: var(--re-surface);
+  border: 1px solid var(--re-border);
+  border-radius: var(--re-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--re-shadow-lg);
+  transition: box-shadow var(--re-base) var(--re-ease);
+}
+.re-pm-card:hover {
+  box-shadow: var(--re-shadow-xl);
+}
+.re-pm-card__media {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+}
+.re-pm-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--re-slow) var(--re-ease);
+}
+.re-pm-card:hover .re-pm-card__media img {
+  transform: scale(1.05);
+}
+.re-pm-card__fav {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--re-error-500);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: transform var(--re-fast) var(--re-ease),
+    background-color var(--re-fast) var(--re-ease);
+}
+.re-pm-card__fav:hover {
+  transform: scale(1.1);
+  background: #fff;
+}
+.re-pm-card__price {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: var(--re-neutral-900);
+  color: var(--re-neutral-0);
+  font-size: 0.85rem;
+  font-weight: var(--re-font-weight-bold);
+  padding: 6px 12px;
+  border-radius: var(--re-radius-pill);
+  box-shadow: var(--re-shadow-sm);
+}
+.re-pm-card__body {
+  padding: var(--re-space-4);
+}
+.re-pm-card__title {
+  margin: 0 0 6px;
+  font-size: 1.15rem;
+  font-weight: var(--re-font-weight-semibold);
+  color: var(--re-neutral-900);
+  letter-spacing: -0.01em;
+}
+.re-pm-card__loc {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 var(--re-space-4);
+  font-size: 0.86rem;
+  color: var(--re-text-muted);
+}
+.re-pm-card__stats {
+  display: flex;
+  gap: var(--re-space-4);
+  padding: var(--re-space-3) 0;
+  border-top: 1px solid var(--re-border);
+  border-bottom: 1px solid var(--re-border);
+  margin-bottom: var(--re-space-4);
+}
+.re-pm-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: var(--re-font-weight-medium);
+  color: var(--re-neutral-700);
+}
+.re-pm-card__cta {
+  width: 100%;
+}

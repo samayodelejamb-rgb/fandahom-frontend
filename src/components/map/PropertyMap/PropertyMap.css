@@ -1,0 +1,190 @@
+/* PropertyMap — layout shell for the reusable map */
+
+.re-pm {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.re-pm__leaflet {
+  width: 100%;
+  height: 100%;
+  background: var(--re-neutral-200);
+}
+
+/* Desktop side panel */
+.re-pm__sidebar {
+  position: absolute;
+  top: var(--re-space-4);
+  right: var(--re-space-4);
+  bottom: var(--re-space-4);
+  width: 360px;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+.re-pm__sidebar > * {
+  pointer-events: auto;
+  width: 100%;
+  animation: re-pm-slide-in 0.4s var(--re-ease) both;
+}
+
+@keyframes re-pm-slide-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Mobile bottom card */
+.re-pm__bottom {
+  position: absolute;
+  left: var(--re-space-3);
+  right: var(--re-space-3);
+  bottom: var(--re-space-3);
+  z-index: 1000;
+  animation: re-pm-rise 0.4s var(--re-ease) both;
+}
+@keyframes re-pm-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Single-property chip */
+.re-pm__single-chip {
+  position: absolute;
+  left: 50%;
+  bottom: var(--re-space-4);
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--re-surface);
+  border: 1px solid var(--re-border);
+  border-radius: var(--re-radius-pill);
+  padding: 8px 16px;
+  font-size: 0.84rem;
+  font-weight: var(--re-font-weight-semibold);
+  color: var(--re-primary-700);
+  box-shadow: var(--re-shadow-md);
+  white-space: nowrap;
+  max-width: calc(100% - var(--re-space-8));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- Custom price pin marker ---------- */
+.re-pm-marker {
+  background: transparent !important;
+  border: none !important;
+}
+.re-pm-pin {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 14px;
+  background: var(--re-neutral-0);
+  color: var(--re-neutral-900);
+  border-radius: var(--re-radius-pill);
+  border: 2px solid var(--re-border-strong);
+  font-size: 0.8rem;
+  font-weight: var(--re-font-weight-bold);
+  font-family: var(--re-font-sans);
+  white-space: nowrap;
+  box-shadow: var(--re-shadow-sm);
+  transition: transform var(--re-fast) var(--re-ease),
+    background-color var(--re-fast) var(--re-ease),
+    color var(--re-fast) var(--re-ease),
+    border-color var(--re-fast) var(--re-ease),
+    box-shadow var(--re-fast) var(--re-ease);
+  cursor: pointer;
+}
+.re-pm-pin::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border-right: 2px solid var(--re-border-strong);
+  border-bottom: 2px solid var(--re-border-strong);
+  transition: background-color var(--re-fast) var(--re-ease),
+    border-color var(--re-fast) var(--re-ease);
+}
+.re-pm-pin:hover {
+  transform: scale(1.08);
+  border-color: var(--re-primary-400);
+  box-shadow: var(--re-shadow-md);
+}
+.re-pm-pin--active {
+  background: var(--re-primary-600);
+  color: var(--re-neutral-0);
+  border-color: var(--re-primary-700);
+  transform: scale(1.12);
+  box-shadow: var(--re-shadow-lg);
+}
+.re-pm-pin--active::after {
+  background: var(--re-primary-600);
+  border-color: var(--re-primary-700);
+}
+
+/* No mappable listings / location unavailable fallback */
+.re-pm__no-map {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--re-space-2);
+  background: var(--re-neutral-100);
+  color: var(--re-text-muted);
+  text-align: center;
+  padding: var(--re-space-6);
+}
+.re-pm__no-map svg {
+  color: var(--re-text-subtle);
+}
+.re-pm__no-map p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: var(--re-font-weight-medium);
+}
+
+/* Responsive: hide desktop panel on small screens */
+@media (max-width: 899px) {
+  .re-pm__sidebar { display: none; }
+}
+@media (min-width: 900px) {
+  .re-pm__bottom { display: none; }
+}
+
+/* Soften Leaflet controls to match the theme */
+.re-pm .leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--re-shadow-md) !important;
+  border-radius: var(--re-radius-md) !important;
+  overflow: hidden;
+}
+.re-pm .leaflet-control-zoom a {
+  background: var(--re-surface) !important;
+  color: var(--re-neutral-700) !important;
+  border-color: var(--re-border) !important;
+  font-weight: var(--re-font-weight-semibold);
+  transition: background-color var(--re-fast) var(--re-ease),
+    color var(--re-fast) var(--re-ease);
+}
+.re-pm .leaflet-control-zoom a:hover {
+  background: var(--re-primary-50) !important;
+  color: var(--re-primary-700) !important;
+}
+.re-pm .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  border-radius: var(--re-radius-sm) !important;
+  font-size: 0.66rem !important;
+  color: var(--re-text-muted) !important;
+}

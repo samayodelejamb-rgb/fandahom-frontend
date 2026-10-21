@@ -1,4 +1,5 @@
 import { useState } from "react";
+import LocationPicker from "../map/LocationPicker";
 import "./ListingForm.css";
 
 const LISTING_TYPES = [
@@ -23,6 +24,8 @@ const BLANK_FORM = {
   bedrooms: "",
   bathrooms: "",
   swimmingPool: false,
+  latitude: null,
+  longitude: null,
 };
 
 /**
@@ -40,6 +43,8 @@ export function listingToFormValues(listing) {
     bedrooms: listing.bedrooms != null ? String(listing.bedrooms) : "",
     bathrooms: listing.bathrooms != null ? String(listing.bathrooms) : "",
     swimmingPool: !!listing.swimming_pool,
+    latitude: listing.latitude ?? null,
+    longitude: listing.longitude ?? null,
   };
 }
 
@@ -58,6 +63,9 @@ function formValuesToPayload(form) {
     bedrooms: form.bedrooms ? Number(form.bedrooms) : undefined,
     bathrooms: form.bathrooms ? Number(form.bathrooms) : undefined,
     swimming_pool: form.swimmingPool,
+    // Optional, per the API doc. Left out entirely when no pin was placed.
+    latitude: form.latitude ?? undefined,
+    longitude: form.longitude ?? undefined,
   };
 }
 
@@ -155,6 +163,21 @@ function ListingForm({
             className="listing-form__input"
             placeholder="14 Admiralty Way, Lekki Phase 1, Lagos"
           />
+        </div>
+
+        <div className="listing-form__field">
+          <label>Pin the location on the map</label>
+          <LocationPicker
+            initialLatitude={initialValues?.latitude ?? null}
+            initialLongitude={initialValues?.longitude ?? null}
+            onLocationSelect={({ latitude, longitude }) =>
+              setForm((prev) => ({ ...prev, latitude, longitude }))
+            }
+            height={280}
+          />
+          <p className="listing-form__note">
+            Optional, but listings with a pin show up on the map and in &quot;Near me&quot; searches.
+          </p>
         </div>
 
         <div className="listing-form__field">

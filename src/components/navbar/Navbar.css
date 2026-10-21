@@ -154,3 +154,60 @@
     height: 36px;
   }
 }
+
+/* ---------- Mobile menu (profile icon opens Wishlist / Map / Contact) ---------- */
+.navbar__mobile {
+  display: none;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.navbar__mobile-btn {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.navbar__menu {
+  position: absolute;
+  top: calc(100% + 0.7rem);
+  right: 0;
+  min-width: 210px;
+  padding: 0.4rem;
+  background: var(--color-surface);
+  border: 1px solid rgba(16, 24, 40, 0.06);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 200;
+}
+
+.navbar__menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.navbar__menu-item:hover,
+.navbar__menu-item:focus-visible {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  /* The extra icons move into the menu; only the profile icon stays on the bar */
+  .navbar__actions--desktop {
+    display: none;
+  }
+
+  .navbar__mobile {
+    display: block;
+  }
+}

@@ -1,1 +1,7 @@
+# 1) Forward API calls to the backend. Netlify fetches them server-side, so the
+#    browser sees ONE site: no CORS errors, and the login cookie is first-party
+#    (which iPhone Safari requires).
+/api/*  https://api-test-v1.fandahom.com/:splat  200
+
+# 2) Everything else is the single-page app.
 /*    /index.html   200

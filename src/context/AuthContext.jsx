@@ -4,7 +4,6 @@ import {
   fetchCsrfToken,
   fetchCurrentUser,
   loginRequest,
-  registerRequest,
   logoutRequest,
 } from "../services/authApi";
 
@@ -13,8 +12,10 @@ const AuthContext = createContext();
 // NOTE: The backend API has no endpoints yet for wishlist or profile
 // updates (checked against the doc from the backend dev). Those two
 // features are kept local-only (localStorage, keyed by user id) until
-// real endpoints exist. Everything else below (register/login/logout/
-// session restore) talks to the real API shape.
+// real endpoints exist. Everything else below (login/logout/session
+// restore) talks to the real API shape. Registration and password reset
+// are two-step email-code flows that don't start a session, so they live
+// in authApi.js and are called straight from their pages.
 function wishlistStorageKey(userId) {
   return `fandahom_wishlist_${userId}`;
 }
@@ -70,6 +71,9 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password, pendingWishlistId) => {
     const loggedInUser = await loginRequest({ email, password });
+    // Starting a session changes Django's CSRF token, so get a fresh one
+    // before any further POST/DELETE.
+    await fetchCsrfToken();
     let wl = loadWishlist(loggedInUser.id);
     if (pendingWishlistId && !wl.includes(pendingWishlistId)) {
       wl = [...wl, pendingWishlistId];
@@ -80,30 +84,11 @@ export function AuthProvider({ children }) {
     return loggedInUser;
   };
 
-  const register = async ({ firstname, lastname, email, password, passwordConfirmation }, pendingWishlistId) => {
-    const newUser = await registerRequest({
-      firstname,
-      lastname,
-      email,
-      password,
-      passwordConfirmation,
-    });
-    // Our mock backend auto-logs-in on register (matches typical real
-    // backend behaviour, but confirm this with your backend dev).
-    let wl = [];
-    if (pendingWishlistId) {
-      wl = [pendingWishlistId];
-      saveWishlist(newUser.id, wl);
-    }
-    setUser(newUser);
-    setWishlist(wl);
-    return newUser;
-  };
-
   const logout = async () => {
     await logoutRequest();
     setUser(null);
     setWishlist([]);
+    await fetchCsrfToken();
   };
 
   // No backend endpoint exists yet for editing profile fields.
@@ -131,7 +116,6 @@ export function AuthProvider({ children }) {
     loading,
     wishlist,
     login,
-    register,
     logout,
     updateProfile,
     toggleWishlist,

@@ -1,0 +1,91 @@
+/* PropertyBottomCard — mobile compact card */
+
+.re-pm-bottom-card {
+  background: var(--re-surface);
+  border: 1px solid var(--re-border);
+  border-radius: var(--re-radius-lg);
+  box-shadow: var(--re-shadow-lg);
+  overflow: hidden;
+}
+.re-pm-bottom-card__inner {
+  display: flex;
+  align-items: stretch;
+  gap: var(--re-space-3);
+  padding: var(--re-space-2);
+}
+.re-pm-bottom-card__media {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: var(--re-radius-md);
+  overflow: hidden;
+}
+.re-pm-bottom-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.re-pm-bottom-card__price {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(22, 26, 29, 0.82);
+  color: var(--re-neutral-0);
+  font-size: 0.72rem;
+  font-weight: var(--re-font-weight-bold);
+  padding: 2px 8px;
+  border-radius: var(--re-radius-pill);
+  backdrop-filter: blur(4px);
+}
+.re-pm-bottom-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+.re-pm-bottom-card__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: var(--re-font-weight-semibold);
+  color: var(--re-neutral-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.re-pm-bottom-card__loc {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  color: var(--re-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.re-pm-bottom-card__stats {
+  display: flex;
+  gap: var(--re-space-3);
+  margin-top: 2px;
+}
+.re-pm-bottom-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.76rem;
+  color: var(--re-neutral-600);
+}
+.re-pm-bottom-card__cta {
+  align-self: center;
+  flex-shrink: 0;
+  padding: 10px 14px;
+}
+
+/* Very small / short screens */
+@media (max-height: 500px) and (max-width: 899px) {
+  .re-pm-bottom-card__inner { gap: var(--re-space-2); padding: 6px; }
+  .re-pm-bottom-card__media { width: 80px; height: 80px; }
+}

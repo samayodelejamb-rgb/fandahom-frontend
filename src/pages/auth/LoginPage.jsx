@@ -1,20 +1,22 @@
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Home } from "lucide-react";
+import PasswordInput from "../../components/common/PasswordInput";
 import { useAuth } from "../../context/AuthContext";
 import "./split-auth.css";
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200";
 
 function LoginPage() {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.email || "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
+  const notice = location.state?.notice; // e.g. "Account created!" after registering
 
   const pendingWishlistId = location.state?.pendingWishlistId;
   const redirectTo = pendingWishlistId
@@ -49,6 +51,12 @@ function LoginPage() {
 
           <h1 className="split-auth__title">Sign in</h1>
 
+          {notice && (
+            <p style={{ fontSize: "0.88rem", color: "#16a34a", margin: "0 0 0.75rem 0" }}>
+              {notice}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="split-auth__form">
             <div>
               <label className="split-auth__label">
@@ -67,12 +75,11 @@ function LoginPage() {
               <label className="split-auth__label">
                 Password <span className="required">*</span>
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="split-auth__input"
+                autoComplete="current-password"
               />
             </div>
 

@@ -1,6 +1,7 @@
 import { apiRequest } from "./apiClient";
 
-// Limits and allowed types, straight from the API doc's reference table.
+// Limits and allowed types, straight from the API doc's reference table
+// (the doc currently allows images and videos only).
 // We check these in the browser BEFORE calling the backend so users get an
 // instant, friendly error instead of a failed request. The backend still
 // enforces them too — never rely on the frontend check alone.
@@ -15,15 +16,10 @@ export const MEDIA_RULES = {
     maxBytes: 2 * 1024 * 1024 * 1024,
     label: "MP4, MOV or WebM up to 2 GB",
   },
-  document: {
-    mimes: ["application/pdf"],
-    maxBytes: 50 * 1024 * 1024,
-    label: "PDF up to 50 MB",
-  },
 };
 
 /**
- * Work out media_type ("image" | "video" | "document") from a File and
+ * Work out media_type ("image" | "video") from a File and
  * check it against the rules above. Returns { mediaType } on success or
  * { error } with a message you can show the user.
  */

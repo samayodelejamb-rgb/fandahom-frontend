@@ -1,0 +1,395 @@
+/* Map View page styles */
+
+.re-mapview {
+  display: flex;
+  flex-direction: column;
+  /* Fill whatever is left under the site's navbar (set from MapView.jsx). */
+  height: calc(100vh - var(--re-top-offset, 0px));
+  height: calc(100dvh - var(--re-top-offset, 0px));
+  background: var(--re-bg);
+  overflow: hidden;
+}
+
+/* ---------- Top bar ---------- */
+.re-mapview__topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--re-space-3);
+  padding: var(--re-space-3) var(--re-space-4);
+  background: var(--re-surface);
+  border-bottom: 1px solid var(--re-border);
+  box-shadow: var(--re-shadow-xs);
+  z-index: 1200;
+  flex-shrink: 0;
+}
+.re-mapview__back {
+  flex-shrink: 0;
+}
+.re-mapview__back span {
+  display: none;
+}
+.re-mapview__searchwrap {
+  position: relative;
+  flex: 1;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.re-mapview__searchicon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--re-text-muted);
+  pointer-events: none;
+}
+.re-mapview__search {
+  width: 100%;
+  height: 44px;
+  padding: 0 40px 0 44px;
+  border: 1px solid var(--re-border-strong);
+  border-radius: var(--re-radius-pill);
+  background: var(--re-neutral-50);
+  font-size: 0.92rem;
+  color: var(--re-text);
+  outline: none;
+  transition: border-color var(--re-base) var(--re-ease),
+    box-shadow var(--re-base) var(--re-ease), background-color var(--re-base) var(--re-ease);
+}
+.re-mapview__search::placeholder {
+  color: var(--re-text-subtle);
+}
+.re-mapview__search:focus {
+  border-color: var(--re-primary-400);
+  background: var(--re-surface);
+  box-shadow: 0 0 0 4px var(--re-primary-50);
+}
+.re-mapview__searchclear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: var(--re-neutral-200);
+  color: var(--re-neutral-600);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background-color var(--re-fast) var(--re-ease),
+    color var(--re-fast) var(--re-ease);
+}
+.re-mapview__searchclear:hover {
+  background: var(--re-neutral-300);
+  color: var(--re-neutral-800);
+}
+.re-mapview__filter {
+  flex-shrink: 0;
+}
+.re-mapview__filter span {
+  display: none;
+}
+.re-mapview__filter--open {
+  background-color: var(--re-primary-50);
+  border-color: var(--re-primary-400);
+  color: var(--re-primary-700);
+}
+
+/* ---------- Filter panel ---------- */
+.re-mapview__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--re-space-4);
+  padding: var(--re-space-3) var(--re-space-4);
+  background: var(--re-surface);
+  border-bottom: 1px solid var(--re-border);
+  box-shadow: var(--re-shadow-xs);
+  z-index: 1100;
+  flex-shrink: 0;
+  animation: re-filter-in 0.25s var(--re-ease) both;
+}
+@keyframes re-filter-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.re-mapview__filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--re-space-3);
+  flex: 1;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.re-mapview__filter-row label {
+  font-size: 0.82rem;
+  font-weight: var(--re-font-weight-semibold);
+  color: var(--re-neutral-700);
+  white-space: nowrap;
+}
+.re-mapview__filter-row input[type="range"] {
+  flex: 1;
+  accent-color: var(--re-primary-600);
+  cursor: pointer;
+}
+.re-mapview__filter-value {
+  font-size: 0.84rem;
+  font-weight: var(--re-font-weight-bold);
+  color: var(--re-primary-700);
+  min-width: 92px;
+  text-align: right;
+}
+.re-mapview__filter-reset {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 0.84rem;
+}
+
+/* ---------- Body / split ---------- */
+.re-mapview__body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+.re-mapview__map {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+/* ---------- Empty state ---------- */
+.re-mapview__empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--re-space-2);
+  text-align: center;
+  padding: var(--re-space-6);
+  background: var(--re-bg);
+  color: var(--re-text-muted);
+}
+.re-mapview__empty svg {
+  color: var(--re-text-subtle);
+  margin-bottom: var(--re-space-2);
+}
+.re-mapview__empty h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: var(--re-font-weight-semibold);
+  color: var(--re-neutral-800);
+}
+.re-mapview__empty p {
+  margin: 0 0 var(--re-space-4);
+  font-size: 0.9rem;
+}
+
+/* ---------- Near-me control row ---------- */
+.re-mapview__nearme {
+  display: flex;
+  align-items: center;
+  gap: var(--re-space-3);
+  padding: var(--re-space-2) var(--re-space-4);
+  background: var(--re-surface);
+  border-bottom: 1px solid var(--re-border);
+  z-index: 1100;
+  flex-shrink: 0;
+}
+.re-mapview__nearme-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 0.84rem;
+}
+.re-mapview__nearme-btn--active {
+  background-color: var(--re-primary-50);
+  border-color: var(--re-primary-400);
+  color: var(--re-primary-700);
+}
+.re-mapview__nearme-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.re-mapview__radius {
+  display: flex;
+  align-items: center;
+  gap: var(--re-space-2);
+  flex-wrap: wrap;
+}
+.re-mapview__radius-label {
+  font-size: 0.8rem;
+  font-weight: var(--re-font-weight-semibold);
+  color: var(--re-neutral-600);
+  white-space: nowrap;
+}
+.re-mapview__radius-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.re-mapview__radius-chip {
+  border: 1px solid var(--re-border-strong);
+  border-radius: var(--re-radius-pill);
+  background: var(--re-neutral-0);
+  color: var(--re-neutral-600);
+  font-size: 0.78rem;
+  font-weight: var(--re-font-weight-semibold);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background-color var(--re-fast) var(--re-ease),
+    color var(--re-fast) var(--re-ease), border-color var(--re-fast) var(--re-ease);
+}
+.re-mapview__radius-chip:hover {
+  border-color: var(--re-primary-400);
+  color: var(--re-primary-700);
+}
+.re-mapview__radius-chip--active {
+  background-color: var(--re-primary-600);
+  border-color: var(--re-primary-700);
+  color: var(--re-neutral-0);
+}
+
+/* ---------- Banners ---------- */
+.re-mapview__banner {
+  display: flex;
+  align-items: center;
+  gap: var(--re-space-2);
+  padding: var(--re-space-2) var(--re-space-4);
+  font-size: 0.84rem;
+  font-weight: var(--re-font-weight-medium);
+  flex-shrink: 0;
+  z-index: 1100;
+}
+.re-mapview__banner--warn {
+  background: var(--re-accent-50);
+  color: var(--re-accent-700);
+  border-bottom: 1px solid var(--re-accent-100);
+}
+.re-mapview__banner--error {
+  background: #fef2f2;
+  color: var(--re-error-600);
+  border-bottom: 1px solid #fecaca;
+}
+.re-mapview__banner span {
+  flex: 1;
+}
+.re-mapview__banner-close {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: opacity var(--re-fast) var(--re-ease);
+}
+.re-mapview__banner-close:hover {
+  opacity: 1;
+}
+
+/* ---------- Loading state ---------- */
+.re-mapview__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--re-space-3);
+  background: var(--re-bg);
+  color: var(--re-text-muted);
+}
+.re-mapview__loading p {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: var(--re-font-weight-medium);
+}
+.re-mapview__spin {
+  animation: re-spin 0.8s linear infinite;
+}
+@keyframes re-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ---------- Responsive breakpoints ---------- */
+
+@media (min-width: 480px) {
+  .re-mapview__back span,
+  .re-mapview__filter span {
+    display: inline;
+  }
+}
+
+@media (min-width: 900px) {
+  .re-mapview__topbar {
+    padding: var(--re-space-4) var(--re-space-6);
+  }
+}
+
+@media (min-width: 1200px) {
+  .re-mapview__searchwrap {
+    max-width: 640px;
+  }
+}
+
+/* The back button is a router <Link> in this app */
+.re-mapview__back {
+  text-decoration: none;
+}
+
+/* Max-price dropdown (naira ceilings) */
+.re-mapview__select {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--re-border);
+  border-radius: var(--re-radius-sm, 8px);
+  background: var(--re-surface);
+  color: var(--re-text);
+  font: inherit;
+}
+
+/* With the duplicate search box removed, keep Filters on the right */
+.re-mapview__filter {
+  margin-left: auto;
+}
+
+/* "Showing results for ..." chip (search typed in the site navbar) */
+.re-mapview__chiprow {
+  padding: 0.5rem 1rem 0;
+  background: var(--re-surface);
+}
+
+.re-mapview__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: var(--re-bg);
+  border: 1px solid var(--re-border);
+  color: var(--re-text);
+  font-size: 0.8rem;
+}
+
+.re-mapview__chip-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--re-muted, #667085);
+  cursor: pointer;
+}
+
+.re-mapview__chip-clear:hover {
+  background: var(--re-border);
+}

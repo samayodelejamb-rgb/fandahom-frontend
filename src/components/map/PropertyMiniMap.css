@@ -1,0 +1,62 @@
+/* PropertyMiniMap — compact map for future Property Details page */
+
+.re-minimap {
+  position: relative;
+  width: 100%;
+  border-radius: var(--re-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--re-border);
+  box-shadow: var(--re-shadow-sm);
+}
+.re-minimap__leaflet {
+  width: 100%;
+  height: 100%;
+  background: var(--re-neutral-200);
+}
+.re-minimap__marker {
+  background: transparent !important;
+  border: none !important;
+}
+.re-minimap__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: re-minimap-drop 0.3s var(--re-ease) both;
+}
+@keyframes re-minimap-drop {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Graceful fallback for missing coordinates */
+.re-minimap--fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--re-space-2);
+  background: var(--re-neutral-100);
+  color: var(--re-text-muted);
+  font-size: 0.86rem;
+  font-weight: var(--re-font-weight-medium);
+}
+.re-minimap--fallback svg {
+  color: var(--re-text-subtle);
+}
+
+/* Soften Leaflet controls */
+.re-minimap .leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--re-shadow-sm) !important;
+  border-radius: var(--re-radius-sm) !important;
+  overflow: hidden;
+}
+.re-minimap .leaflet-control-zoom a {
+  background: var(--re-surface) !important;
+  color: var(--re-neutral-700) !important;
+}
+.re-minimap .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.6rem !important;
+  border-radius: var(--re-radius-sm) 0 0 0 !important;
+}

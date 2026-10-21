@@ -9,11 +9,15 @@ import {
   MessageCircle,
   Calendar,
   Tag,
+  Play,
 } from "lucide-react";
 import { fetchListing, fetchListings } from "../../services/listingApi";
 import PropertyCard from "../../components/property/PropertyCard";
-import { getGalleryImages } from "../../utils/listingImages";
+import { getGalleryMedia } from "../../utils/listingImages";
+import { isValidCoordinates } from "../../utils/mapHelpers";
+import PropertyMiniMap from "../../components/map/PropertyMiniMap";
 import "./PropertyDetailPage.css";
+import "./PropertyGalleryVideo.css";
 
 const TYPE_LABELS = { 1: "For Rent", 2: "For Sale" };
 const TAG_LABELS = { 1: "New", 2: "Hot", 3: "Featured" };
@@ -88,7 +92,8 @@ function PropertyDetailPage() {
     );
   }
 
-  const photos = getGalleryImages(listing);
+  const gallery = getGalleryMedia(listing);
+  const current = gallery[activePhoto] || gallery[0];
 
   return (
     <div className="pd-page">
@@ -98,22 +103,36 @@ function PropertyDetailPage() {
 
       <div className="pd-page__layout">
         <div className="pd-page__left">
-          {/* Real uploaded photos (see src/utils/listingImages.js). */}
+          {/* Real uploaded photos and videos (see src/utils/listingImages.js). */}
           <div className="pd-gallery">
             <div className="pd-gallery__main">
-              <img src={photos[activePhoto] || photos[0]} alt={listing.title} />
+              {current.type === "video" ? (
+                // key makes the player reset when you switch to another video
+                <video key={current.url} src={current.url} controls playsInline preload="metadata" />
+              ) : (
+                <img src={current.url} alt={listing.title} />
+              )}
             </div>
-            {photos.length > 1 && (
+            {gallery.length > 1 && (
               <div className="pd-gallery__thumbs">
-                {photos.map((url, i) => (
+                {gallery.map((item, i) => (
                   <button
-                    key={`${i}-${url}`}
+                    key={`${item.id}-${i}`}
                     type="button"
                     className={`pd-gallery__thumb ${i === activePhoto ? "pd-gallery__thumb--active" : ""}`}
                     onClick={() => setActivePhoto(i)}
-                    aria-label={`Show photo ${i + 1}`}
+                    aria-label={item.type === "video" ? `Play video ${i + 1}` : `Show photo ${i + 1}`}
                   >
-                    <img src={url} alt="" />
+                    {item.type === "video" ? (
+                      <>
+                        <video src={item.url} muted preload="metadata" />
+                        <span className="pd-gallery__play">
+                          <Play size={18} fill="currentColor" />
+                        </span>
+                      </>
+                    ) : (
+                      <img src={item.url} alt="" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -153,7 +172,13 @@ function PropertyDetailPage() {
           {/* Location */}
           <div className="pd-panel pd-location-panel">
             <h3 className="pd-panel__title">Location</h3>
-            <div className="pd-map-placeholder">Map view coming soon</div>
+            <div style={{ marginBottom: "var(--space-md)" }}>
+              <PropertyMiniMap
+                latitude={listing.latitude}
+                longitude={listing.longitude}
+                height={240}
+              />
+            </div>
             <p style={{ fontWeight: 600, margin: 0 }}>{listing.address}</p>
           </div>
         </div>
@@ -186,12 +211,32 @@ function PropertyDetailPage() {
             </div>
 
             <div className="pd-info__actions">
-              <button className="pd-btn pd-btn--outline">
-                <MapPinned size={16} /> View on Map
-              </button>
-              <button className="pd-btn pd-btn--primary">
+              {isValidCoordinates(listing.latitude, listing.longitude) ? (
+                <Link to={`/map?focus=${listing.id}`} className="pd-btn pd-btn--outline">
+                  <MapPinned size={16} /> View on Map
+                </Link>
+              ) : (
+                <button
+                  className="pd-btn pd-btn--outline"
+                  disabled
+                  title="This listing has no map location"
+                  style={{ opacity: 0.5, cursor: "not-allowed" }}
+                >
+                  <MapPinned size={16} /> View on Map
+                </button>
+              )}
+              <Link
+                to="/contact"
+                state={{
+                  subject: `Enquiry about: ${listing.title}`,
+                  message: `Hi, I'm interested in "${listing.title}"${
+                    listing.address ? ` at ${listing.address}` : ""
+                  } (listing #${listing.id}). Please send me more details.`,
+                }}
+                className="pd-btn pd-btn--primary"
+              >
                 <MessageCircle size={16} /> Make Enquiry
-              </button>
+              </Link>
             </div>
           </div>
 

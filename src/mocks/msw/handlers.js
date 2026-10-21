@@ -44,6 +44,37 @@ function isStrongPassword(pw) {
 }
 
 // ---------------------------------------------------------------------
+// Email codes (OTP) for registration and password reset
+// ---------------------------------------------------------------------
+// The real backend emails a random 6-digit code that expires after 15
+// minutes, and allows 3 code requests per hour per email. The mock uses the
+// fixed code 123456 (the UI shows a "Demo mode" hint) and the same limits.
+const MOCK_OTP_CODE = "123456";
+const OTP_LIFETIME_MS = 15 * 60 * 1000;
+const OTP_REQUESTS_PER_HOUR = 3;
+
+const pendingRegistrations = new Map(); // email -> { code, expiresAt }
+const pendingPasswordResets = new Map();
+const otpRequestLog = new Map(); // email -> [timestamps]
+
+function tooManyOtpRequests(email) {
+  const hourAgo = Date.now() - 60 * 60 * 1000;
+  const recent = (otpRequestLog.get(email) || []).filter((t) => t > hourAgo);
+  if (recent.length >= OTP_REQUESTS_PER_HOUR) return true;
+  otpRequestLog.set(email, [...recent, Date.now()]);
+  return false;
+}
+
+function issueOtp(store, email) {
+  store.set(email, { code: MOCK_OTP_CODE, expiresAt: Date.now() + OTP_LIFETIME_MS });
+}
+
+function otpIsValid(store, email, code) {
+  const entry = store.get(email);
+  return !!entry && entry.code === String(code) && Date.now() < entry.expiresAt;
+}
+
+// ---------------------------------------------------------------------
 // Listings
 // ---------------------------------------------------------------------
 
@@ -197,10 +228,6 @@ const MEDIA_RULES = {
     mimes: ["video/mp4", "video/quicktime", "video/webm"],
     maxBytes: 2 * 1024 * 1024 * 1024,
   },
-  document: {
-    mimes: ["application/pdf"],
-    maxBytes: 50 * 1024 * 1024,
-  },
 };
 
 const SEED_PHOTOS = [
@@ -275,8 +302,8 @@ function publicMedia(m, isCover = false) {
     file_name: m.file_name,
     file_size: m.file_size,
     state,
-    width: ready && m.media_type !== "document" ? 1920 : null,
-    height: ready && m.media_type !== "document" ? 1080 : null,
+    width: ready ? 1920 : null,
+    height: ready ? 1080 : null,
     duration_secs: ready && m.media_type === "video" ? 30 : null,
     sort_order: m.sort_order,
     is_cover: isCover,
@@ -287,29 +314,48 @@ function publicMedia(m, isCover = false) {
   };
 }
 
-// Ready images attached to a listing, in display order.
-function readyListingImages(listingId) {
+// Every READY image and video attached to a listing, in display order.
+function readyListingMedia(listingId) {
   return fakeMedia
     .filter(
       (m) =>
         m.owner_type === "listing" &&
         m.owner_id === listingId &&
-        m.media_type === "image" &&
         mediaState(m) === "ready"
     )
     .sort((a, b) => a.sort_order - b.sort_order);
 }
 
-function publicListing(l) {
+// Ready IMAGES only (publishing needs at least one of these).
+function readyListingImages(listingId) {
+  return readyListingMedia(listingId).filter((m) => m.media_type === "image");
+}
+
+// Shown by the real API when a listing has no ready image yet.
+const PLACEHOLDER_IMAGE = "https://placehold.co/800x600/e2e8f0/94a3b8?text=No+Image";
+
+// A listing exactly as the API doc describes it:
+//   cover_image_url  the cover image URL, or a placeholder
+//   media            LIST endpoints: at most 1 item (the cover image).
+//                    DETAIL endpoint (detail = true): every ready image and
+//                    video, cover first, then by sort_order.
+function publicListing(l, detail = false) {
   const { _ownerId, ...rest } = l;
+  const ready = readyListingMedia(l.id);
+  const cover = ready.find((m) => m.media_type === "image") || null;
+
+  let media = [];
+  if (detail) {
+    const others = ready.filter((m) => m !== cover);
+    media = (cover ? [cover, ...others] : others).map((m) => publicMedia(m, m === cover));
+  } else if (cover) {
+    media = [publicMedia(cover, true)];
+  }
+
   return {
     ...rest,
-    // ASSUMED — NOT IN THE API DOC. The documented listing object has no
-    // way to get a listing's photos. This mock embeds a `media` array of
-    // ready images so the UI can be built now. Ask the backend dev what
-    // the real shape is (embedded array? cover_url? a separate endpoint?)
-    // and change ONLY this function + the frontend helper that reads it.
-    media: readyListingImages(l.id).map((m, i) => publicMedia(m, i === 0)),
+    cover_image_url: cover ? publicMedia(cover, true).url : PLACEHOLDER_IMAGE,
+    media,
   };
 }
 
@@ -318,6 +364,17 @@ function canViewListing(listing, userId) {
   if (!listing || listing.is_deleted) return false;
   if (listing.status === STATUS.PUBLISHED) return true;
   return !!userId && listing._ownerId === userId;
+}
+
+// Distance in km between two coordinates (haversine formula).
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function applyListingFilters(listings, params) {
@@ -353,6 +410,21 @@ function applyListingFilters(listings, params) {
   const bathrooms = params.get("bathrooms");
   if (bathrooms) result = result.filter((l) => l.bathrooms === Number(bathrooms));
 
+  // Proximity search: needs all three of lat, lng and radius_km (per the
+  // API doc). Listings without coordinates are left out.
+  const lat = params.get("lat");
+  const lng = params.get("lng");
+  const radiusKm = params.get("radius_km");
+  if (lat && lng && radiusKm) {
+    const [la, ln, r] = [Number(lat), Number(lng), Number(radiusKm)];
+    result = result.filter(
+      (l) =>
+        l.latitude != null &&
+        l.longitude != null &&
+        distanceKm(la, ln, l.latitude, l.longitude) <= r
+    );
+  }
+
   const swimmingPool = params.get("swimming_pool");
   if (swimmingPool !== null) result = result.filter((l) => l.swimming_pool === (swimmingPool === "true"));
 
@@ -384,13 +456,39 @@ export const handlers = [
     return HttpResponse.json({ csrf_token: FAKE_CSRF_TOKEN });
   }),
 
-  // POST /core/auth/register
-  http.post(`${BASE_URL}/core/auth/register`, async ({ request }) => {
-    const body = await request.json();
-    const { firstname, lastname, email, password, password_confirmation } = body;
+  // POST /core/auth/register/   (step 1: email a 6-digit code)
+  http.post(`${BASE_URL}/core/auth/register/`, async ({ request }) => {
+    const { email } = await request.json();
 
-    if (!firstname || !lastname || !email || !password || !password_confirmation) {
-      return HttpResponse.json({ error: "Missing fields" }, { status: 400 });
+    if (!email) return HttpResponse.json({ error: "Missing email" }, { status: 400 });
+    if (fakeUsers.some((u) => u.email === email)) {
+      return HttpResponse.json(
+        { error: "An account with this email already exists" },
+        { status: 409 }
+      );
+    }
+    if (tooManyOtpRequests(email)) {
+      return HttpResponse.json(
+        { error: "Too many requests. Please wait and try again later." },
+        { status: 429 }
+      );
+    }
+
+    issueOtp(pendingRegistrations, email);
+    return HttpResponse.json(
+      { message: `Verification code sent to ${email}` },
+      { status: 200 }
+    );
+  }),
+
+  // POST /core/auth/register/verify/   (step 2: check the code, create the
+  // account). Like the real API, this does NOT start a session.
+  http.post(`${BASE_URL}/core/auth/register/verify/`, async ({ request }) => {
+    const body = await request.json();
+    const { email, code, firstname, lastname, password, password_confirmation } = body;
+
+    if (!email || !code || !firstname || !lastname || !password || !password_confirmation) {
+      return HttpResponse.json({ error: "Missing required field" }, { status: 400 });
     }
     if (password !== password_confirmation) {
       return HttpResponse.json({ error: "Passwords do not match" }, { status: 400 });
@@ -400,6 +498,9 @@ export const handlers = [
         { error: "Password does not meet strength requirements" },
         { status: 400 }
       );
+    }
+    if (!otpIsValid(pendingRegistrations, email, code)) {
+      return HttpResponse.json({ error: "Invalid or expired code" }, { status: 400 });
     }
     if (fakeUsers.some((u) => u.email === email)) {
       return HttpResponse.json({ error: "Email already registered" }, { status: 409 });
@@ -413,9 +514,59 @@ export const handlers = [
       password,
     };
     fakeUsers.push(newUser);
-    currentSessionUserId = newUser.id; // auto-login after register, matches typical UX
+    pendingRegistrations.delete(email);
 
     return HttpResponse.json({ user: publicUser(newUser) }, { status: 201 });
+  }),
+
+  // POST /core/auth/password/reset/   (step 1: email a code). Always 200,
+  // whether or not the email has an account.
+  http.post(`${BASE_URL}/core/auth/password/reset/`, async ({ request }) => {
+    const { email } = await request.json();
+
+    if (!email) return HttpResponse.json({ error: "Missing email" }, { status: 400 });
+    if (tooManyOtpRequests(email)) {
+      return HttpResponse.json(
+        { error: "Too many requests. Please wait and try again later." },
+        { status: 429 }
+      );
+    }
+
+    if (fakeUsers.some((u) => u.email === email)) {
+      issueOtp(pendingPasswordResets, email);
+    }
+    return HttpResponse.json(
+      { message: `If an account exists for ${email}, a reset code has been sent.` },
+      { status: 200 }
+    );
+  }),
+
+  // POST /core/auth/password/reset/verify/   (step 2: check the code, set
+  // the new password). Does not start a session.
+  http.post(`${BASE_URL}/core/auth/password/reset/verify/`, async ({ request }) => {
+    const { email, code, password, password_confirmation } = await request.json();
+
+    if (!email || !code || !password || !password_confirmation) {
+      return HttpResponse.json({ error: "Missing required field" }, { status: 400 });
+    }
+    if (password !== password_confirmation) {
+      return HttpResponse.json({ error: "Passwords do not match" }, { status: 400 });
+    }
+    if (!isStrongPassword(password)) {
+      return HttpResponse.json(
+        { error: "Password does not meet strength requirements" },
+        { status: 400 }
+      );
+    }
+    if (!otpIsValid(pendingPasswordResets, email, code)) {
+      return HttpResponse.json({ error: "Invalid or expired code" }, { status: 400 });
+    }
+
+    const user = fakeUsers.find((u) => u.email === email);
+    if (!user) return HttpResponse.json({ error: "Invalid or expired code" }, { status: 400 });
+    user.password = password;
+    pendingPasswordResets.delete(email);
+    return HttpResponse.json({}, { status: 200 });
   }),
 
   // POST /core/auth/login
@@ -457,7 +608,7 @@ export const handlers = [
     const filtered = applyListingFilters(published, url.searchParams);
     const { pageItems, meta } = paginate(filtered, url.searchParams);
     return HttpResponse.json(
-      { listings: pageItems.map(publicListing), meta },
+      { listings: pageItems.map((l) => publicListing(l)), meta },
       { status: 200 }
     );
   }),
@@ -525,7 +676,7 @@ export const handlers = [
     const filtered = applyListingFilters(mine, url.searchParams);
     const { pageItems, meta } = paginate(filtered, url.searchParams);
     return HttpResponse.json(
-      { listings: pageItems.map(publicListing), meta },
+      { listings: pageItems.map((l) => publicListing(l)), meta },
       { status: 200 }
     );
   }),
@@ -536,7 +687,29 @@ export const handlers = [
     if (!canViewListing(listing, currentSessionUserId)) {
       return HttpResponse.json({ error: "Listing not found" }, { status: 404 });
     }
-    return HttpResponse.json({ listing: publicListing(listing) }, { status: 200 });
+    return HttpResponse.json({ listing: publicListing(listing, true) }, { status: 200 });
+  }),
+
+  // GET /listing/<id>/media/  — every media item attached to a listing.
+  // The owner sees items in ANY state (for progress polling); everyone
+  // else sees READY items only.
+  http.get(`${BASE_URL}/listing/:id/media/`, ({ params }) => {
+    const listing = fakeListings.find((l) => l.id === Number(params.id));
+    if (!listing || listing.is_deleted) {
+      return HttpResponse.json({ error: "Listing not found" }, { status: 404 });
+    }
+
+    const isOwner = !!currentSessionUserId && listing._ownerId === currentSessionUserId;
+    const all = fakeMedia
+      .filter((m) => m.owner_type === "listing" && m.owner_id === listing.id)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    const visible = isOwner ? all : all.filter((m) => mediaState(m) === "ready");
+
+    const cover = readyListingMedia(listing.id).find((m) => m.media_type === "image");
+    return HttpResponse.json(
+      { media: visible.map((m) => publicMedia(m, m === cover)) },
+      { status: 200 }
+    );
   }),
 
   // PATCH /listing/<id>/  (update — NOT in the documented API, built on an
@@ -788,20 +961,6 @@ export const handlers = [
   http.get(`${BASE_URL}/media/:id/`, ({ params }) => {
     const media = fakeMedia.find((m) => m.id === Number(params.id));
     if (!media) return HttpResponse.json({ error: "Media not found" }, { status: 404 });
-
-    if (media.media_type === "document") {
-      if (!currentSessionUserId) return notAuthenticated();
-      const listing =
-        media.owner_type === "listing"
-          ? fakeListings.find((l) => l.id === media.owner_id)
-          : null;
-      const allowed =
-        media.uploader_id === currentSessionUserId ||
-        (listing && listing._ownerId === currentSessionUserId);
-      if (!allowed) {
-        return HttpResponse.json({ error: "Not authorised to view this document" }, { status: 403 });
-      }
-    }
 
     return HttpResponse.json({ media: publicMedia(media) }, { status: 200 });
   }),

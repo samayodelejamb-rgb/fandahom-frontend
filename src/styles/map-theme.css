@@ -1,0 +1,192 @@
+/* Real estate theme — shared tokens for the three pluggable pages */
+
+:root {
+  /* Primary brand ramp (deep teal) */
+  --re-primary-50: #eef9f8;
+  --re-primary-100: #d4eeec;
+  --re-primary-200: #a9dcd9;
+  --re-primary-300: #74c3bf;
+  --re-primary-400: #45a5a1;
+  --re-primary-500: #2b8985;
+  --re-primary-600: #1f6c69;
+  --re-primary-700: #195654;
+  --re-primary-800: #163f3d;
+  --re-primary-900: #122f2e;
+
+  /* Accent ramp (warm amber) */
+  --re-accent-50: #fff8ec;
+  --re-accent-100: #ffe8c4;
+  --re-accent-200: #ffd088;
+  --re-accent-300: #ffb74d;
+  --re-accent-400: #ff9e1f;
+  --re-accent-500: #f5830a;
+  --re-accent-600: #d96700;
+  --re-accent-700: #b34e00;
+
+  /* Semantic ramps */
+  --re-success-500: #16a34a;
+  --re-success-600: #15803d;
+  --re-warning-500: #f59e0b;
+  --re-error-500: #dc2626;
+  --re-error-600: #b91c1c;
+
+  /* Neutrals */
+  --re-neutral-0: #ffffff;
+  --re-neutral-50: #f8fafb;
+  --re-neutral-100: #f1f4f6;
+  --re-neutral-200: #e4eaee;
+  --re-neutral-300: #d2dadd;
+  --re-neutral-400: #a9b2b9;
+  --re-neutral-500: #7a8389;
+  --re-neutral-600: #565d62;
+  --re-neutral-700: #3a4045;
+  --re-neutral-800: #252a2e;
+  --re-neutral-900: #161a1d;
+
+  /* Semantic aliases */
+  --re-bg: var(--re-neutral-50);
+  --re-surface: var(--re-neutral-0);
+  --re-text: var(--re-neutral-800);
+  --re-text-muted: var(--re-neutral-500);
+  --re-text-subtle: var(--re-neutral-400);
+  --re-border: var(--re-neutral-200);
+  --re-border-strong: var(--re-neutral-300);
+
+  /* Radius */
+  --re-radius-sm: 8px;
+  --re-radius-md: 12px;
+  --re-radius-lg: 16px;
+  --re-radius-xl: 24px;
+  --re-radius-pill: 999px;
+
+  /* Shadows */
+  --re-shadow-xs: 0 1px 2px rgba(16, 26, 29, 0.06);
+  --re-shadow-sm: 0 2px 8px rgba(16, 26, 29, 0.06);
+  --re-shadow-md: 0 6px 20px rgba(16, 26, 29, 0.08);
+  --re-shadow-lg: 0 14px 40px rgba(16, 26, 29, 0.12);
+  --re-shadow-xl: 0 24px 60px rgba(16, 26, 29, 0.16);
+
+  /* Spacing scale (8px base) */
+  --re-space-1: 4px;
+  --re-space-2: 8px;
+  --re-space-3: 12px;
+  --re-space-4: 16px;
+  --re-space-5: 20px;
+  --re-space-6: 24px;
+  --re-space-8: 32px;
+  --re-space-10: 40px;
+  --re-space-12: 48px;
+  --re-space-16: 64px;
+
+  /* Typography */
+  --re-font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --re-font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --re-font-weight-regular: 400;
+  --re-font-weight-medium: 500;
+  --re-font-weight-semibold: 600;
+  --re-font-weight-bold: 700;
+
+  /* Motion */
+  --re-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --re-fast: 160ms;
+  --re-base: 240ms;
+  --re-slow: 400ms;
+}
+
+/* Base reset for the page surfaces */
+.re-page {
+  margin: 0;
+  font-family: var(--re-font-sans);
+  color: var(--re-text);
+  background-color: var(--re-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+.re-page *,
+.re-page *::before,
+.re-page *::after {
+  box-sizing: border-box;
+}
+
+.re-page img {
+  display: block;
+  max-width: 100%;
+}
+
+.re-page button {
+  font-family: inherit;
+}
+
+/* Shared button styles */
+.re-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--re-space-2);
+  border: 1px solid transparent;
+  border-radius: var(--re-radius-pill);
+  padding: 11px 20px;
+  font-size: 0.9rem;
+  font-weight: var(--re-font-weight-semibold);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--re-base) var(--re-ease),
+    color var(--re-base) var(--re-ease), border-color var(--re-base) var(--re-ease),
+    box-shadow var(--re-base) var(--re-ease), transform var(--re-fast) var(--re-ease);
+  white-space: nowrap;
+}
+.re-btn:active {
+  transform: scale(0.97);
+}
+.re-btn--primary {
+  background-color: var(--re-primary-600);
+  color: var(--re-neutral-0);
+  box-shadow: var(--re-shadow-sm);
+}
+.re-btn--primary:hover {
+  background-color: var(--re-primary-700);
+  box-shadow: var(--re-shadow-md);
+}
+.re-btn--accent {
+  background-color: var(--re-accent-400);
+  color: var(--re-neutral-900);
+  box-shadow: var(--re-shadow-sm);
+}
+.re-btn--accent:hover {
+  background-color: var(--re-accent-500);
+  box-shadow: var(--re-shadow-md);
+}
+.re-btn--ghost {
+  background-color: var(--re-neutral-0);
+  color: var(--re-neutral-700);
+  border-color: var(--re-border-strong);
+}
+.re-btn--ghost:hover {
+  border-color: var(--re-primary-400);
+  color: var(--re-primary-700);
+  background-color: var(--re-primary-50);
+}
+.re-btn--dark {
+  background-color: var(--re-neutral-800);
+  color: var(--re-neutral-0);
+}
+.re-btn--dark:hover {
+  background-color: var(--re-neutral-900);
+}
+
+/* Leaflet container needs an explicit height */
+.re-leaflet {
+  width: 100%;
+  height: 100%;
+  background: var(--re-neutral-200);
+}
+
+/* Leaflet draws its layers with z-index values up to 1000, which would
+   float above this app's sticky navbar when a page scrolls. Containing each
+   map in its own stacking context keeps them underneath it. */
+.re-leaflet,
+.leaflet-container {
+  isolation: isolate;
+}

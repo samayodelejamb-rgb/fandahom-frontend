@@ -1,0 +1,73 @@
+/* LocationPicker — reusable map for future Create Listing form */
+
+.re-loc-picker {
+  position: relative;
+  width: 100%;
+  border-radius: var(--re-radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--re-border);
+  box-shadow: var(--re-shadow-sm);
+}
+.re-loc-picker__map {
+  width: 100%;
+  height: 100%;
+  background: var(--re-neutral-200);
+  cursor: crosshair;
+}
+.re-loc-picker__marker {
+  background: transparent !important;
+  border: none !important;
+}
+.re-loc-picker__pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: re-loc-drop 0.3s var(--re-ease) both;
+}
+@keyframes re-loc-drop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.re-loc-picker__hint {
+  position: absolute;
+  bottom: var(--re-space-2);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--re-surface);
+  border: 1px solid var(--re-border);
+  border-radius: var(--re-radius-pill);
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: var(--re-font-weight-medium);
+  color: var(--re-primary-700);
+  box-shadow: var(--re-shadow-sm);
+  white-space: nowrap;
+  max-width: calc(100% - var(--re-space-4));
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.re-loc-picker__hint svg {
+  flex-shrink: 0;
+  color: var(--re-primary-600);
+}
+
+/* Soften Leaflet controls */
+.re-loc-picker .leaflet-control-zoom {
+  border: none !important;
+  box-shadow: var(--re-shadow-sm) !important;
+  border-radius: var(--re-radius-sm) !important;
+  overflow: hidden;
+}
+.re-loc-picker .leaflet-control-zoom a {
+  background: var(--re-surface) !important;
+  color: var(--re-neutral-700) !important;
+}
+.re-loc-picker .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.85) !important;
+  font-size: 0.62rem !important;
+  border-radius: var(--re-radius-sm) 0 0 0 !important;
+}

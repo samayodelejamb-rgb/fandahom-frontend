@@ -1,0 +1,32 @@
+/* Video support for the property page gallery.
+   Kept in its own file so it never overwrites your own PropertyDetailPage.css. */
+
+/* Videos should show whole (not cropped) on a dark background */
+.pd-gallery__main video {
+  object-fit: contain;
+  background: #0b1220;
+}
+
+/* Thumbnail for a video: first frame + a play icon on top */
+.pd-gallery__thumb {
+  position: relative;
+}
+
+.pd-gallery__thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+.pd-gallery__play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}

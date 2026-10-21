@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, ImagePlus, Trash2, X } from "lucide-react";
 import {
   fetchListing,
+  fetchListingMedia,
   publishListing,
   unpublishListing,
 } from "../../services/listingApi";
@@ -12,8 +13,7 @@ import "./ListingMediaPage.css";
 // Listing status values from the API doc.
 const STATUS_LABELS = { 1: "Draft", 2: "Published", 3: "Unpublished" };
 
-// This page accepts photos and videos. (The API also supports PDF
-// documents, but those aren't shown to the public, so they're left out.)
+// This page accepts photos and videos (the two media types in the API doc).
 const ACCEPT = [...MEDIA_RULES.image.mimes, ...MEDIA_RULES.video.mimes].join(",");
 
 // Turn the progress updates from uploadMedia() into text for the user.
@@ -36,6 +36,37 @@ function stageLabel(update) {
     default:
       return "Working...";
   }
+}
+
+// Processing states from the API doc that are still "in progress".
+const PROCESSING_STATES = ["pending_scan", "scanning", "pending_transcode", "transcoding"];
+
+// Turns a media object from GET /listing/<id>/media/ into a tile.
+function mediaToItem(m) {
+  if (m.state === "ready") {
+    return { key: `existing-${m.id}`, name: m.file_name, status: "ready", label: "", media: m, error: "" };
+  }
+  if (m.state === "infected" || m.state === "failed") {
+    return {
+      key: `existing-${m.id}`,
+      name: m.file_name,
+      status: "error",
+      label: "",
+      media: m,
+      error:
+        m.state === "infected"
+          ? "Rejected by the virus scan."
+          : "Processing failed. Remove it and upload again.",
+    };
+  }
+  return {
+    key: `existing-${m.id}`,
+    name: m.file_name,
+    status: "working",
+    label: stageLabel({ stage: "processing", media: m }),
+    media: m,
+    error: "",
+  };
 }
 
 function ListingMediaPage() {
@@ -63,26 +94,14 @@ function ListingMediaPage() {
       setPageLoading(true);
       setPageError("");
       try {
-        const data = await fetchListing(listingId);
+        const [data, media] = await Promise.all([
+          fetchListing(listingId),
+          // Owner sees every item in any state (per the API doc).
+          fetchListingMedia(listingId),
+        ]);
         if (cancelled) return;
         setListing(data);
-
-        // ASSUMED, NOT IN THE API DOC: the listing object carries a
-        // `media` array of its ready images. If your backend dev answers
-        // differently (cover_url, a separate endpoint...), change only
-        // this block. Without it, the page still works for files added
-        // during this visit.
-        const existing = Array.isArray(data.media) ? data.media : [];
-        setItems(
-          existing.map((m) => ({
-            key: `existing-${m.id}`,
-            name: m.file_name,
-            status: "ready",
-            label: "",
-            media: m,
-            error: "",
-          }))
-        );
+        setItems(media.map(mediaToItem));
       } catch (err) {
         if (!cancelled) setPageError(err.message);
       } finally {
@@ -96,6 +115,33 @@ function ListingMediaPage() {
     };
   }, [listingId]);
 
+  // Files uploaded earlier that were still processing when the page opened
+  // (e.g. after a refresh): re-check the listing's media every 3 seconds
+  // until they finish.
+  const stillProcessing = items.some(
+    (it) => it.key.startsWith("existing-") && PROCESSING_STATES.includes(it.media?.state)
+  );
+  useEffect(() => {
+    if (!stillProcessing) return undefined;
+
+    const timer = setInterval(async () => {
+      try {
+        const fresh = await fetchListingMedia(listingId);
+        setItems((prev) =>
+          prev.map((it) => {
+            if (!it.key.startsWith("existing-")) return it;
+            const latest = fresh.find((m) => m.id === it.media?.id);
+            return latest ? mediaToItem(latest) : it;
+          })
+        );
+      } catch {
+        /* try again on the next tick */
+      }
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [stillProcessing, listingId]);
+
   const updateItem = (key, changes) => {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, ...changes } : it)));
   };
@@ -104,7 +150,7 @@ function ListingMediaPage() {
     const key = `upload-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const check = validateFile(file);
 
-    if (check.error || check.mediaType === "document") {
+    if (check.error) {
       setItems((prev) => [
         ...prev,
         {
@@ -113,7 +159,7 @@ function ListingMediaPage() {
           status: "error",
           label: "",
           media: null,
-          error: check.error || `"${file.name}" isn't a photo or video.`,
+          error: check.error,
         },
       ]);
       return;

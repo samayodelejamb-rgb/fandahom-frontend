@@ -11,6 +11,8 @@ import CreateListingPage from "./pages/create-listing/CreateListingPage";
 import EditListingPage from "./pages/edit-listing/EditListingPage";
 import MyListingsPage from "./pages/my-listings/MyListingsPage";
 import ListingMediaPage from "./pages/listing-media/ListingMediaPage";
+import MapView from "./pages/map/MapView";
+import ContactPage from "./pages/contact/ContactPage";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -58,6 +60,8 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      { path: "/map", element: <MapView /> },
+      { path: "/contact", element: <ContactPage /> },
       {
         path: "/listing-media/:id",
         element: (

@@ -19,21 +19,71 @@ export function setUnauthorizedHandler(fn) {
 
 // For these endpoints a 401 is a normal answer (e.g. wrong password on
 // login), not an expired session, so they must NOT trigger the handler.
-const AUTH_PATHS = ["/core/auth/login", "/core/auth/register", "/core/auth/logout"];
+const AUTH_PATHS = [
+  "/core/auth/login",
+  "/core/auth/logout",
+  "/core/auth/register/",
+  "/core/auth/register/verify/",
+  "/core/auth/password/reset/",
+  "/core/auth/password/reset/verify/",
+];
+
+// How long to wait for the backend before giving up. Without a limit, a
+// connection that hangs would leave the app waiting (and the page blank)
+// forever.
+const DEFAULT_TIMEOUT_MS = 15000;
+const STARTUP_TIMEOUT_MS = 8000;
+
+// fetch() with a time limit and plain-English errors instead of the
+// browser's "Failed to fetch".
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (err) {
+    const error = new Error(
+      err.name === "AbortError"
+        ? "The server took too long to respond. Check your connection and try again."
+        : "Can't reach the server. Check your connection and try again."
+    );
+    error.status = 0;
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 /**
  * Fetches a CSRF token from the backend and caches it in memory.
- * Must be called once before any POST/DELETE request is made
- * (e.g. on app load). Safe to call again if a request comes back
- * with a stale-token error.
+ * Every POST and DELETE needs it (as the X-CSRFToken header). Call once on
+ * app load; it's also re-fetched after login, because Django changes the
+ * CSRF token when a session starts.
  */
 export async function fetchCsrfToken() {
-  const res = await fetch(`${BASE_URL}/core/auth/csrf`, {
-    credentials: "include",
-  });
-  const data = await res.json();
+  const res = await fetchWithTimeout(
+    `${BASE_URL}/core/auth/csrf`,
+    { credentials: "include" },
+    STARTUP_TIMEOUT_MS
+  );
+  const data = parseBody(await res.text());
+  if (!res.ok || !data.csrf_token) {
+    const error = new Error(`Couldn't start a secure session (status ${res.status}).`);
+    error.status = res.status;
+    throw error;
+  }
   csrfToken = data.csrf_token;
   return csrfToken;
+}
+
+// Reads a response body as JSON without crashing on an HTML error page.
+function parseBody(text) {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    return {};
+  }
 }
 
 /**
@@ -41,9 +91,13 @@ export async function fetchCsrfToken() {
  * call this instead of using fetch() directly.
  *
  * @param {string} path - e.g. "/core/auth/login"
- * @param {object} options - { method, body, isJson }
+ * @param {object} options - { method, body, isJson, timeoutMs }
  */
-export async function apiRequest(path, { method = "GET", body, isJson = true } = {}) {
+export async function apiRequest(
+  path,
+  { method = "GET", body, isJson = true, timeoutMs = DEFAULT_TIMEOUT_MS } = {},
+  isRetry = false
+) {
   const headers = {};
 
   if (isJson) {
@@ -51,7 +105,8 @@ export async function apiRequest(path, { method = "GET", body, isJson = true } =
   }
 
   // CSRF token is required on any state-changing request (POST/DELETE).
-  const isMutating = method === "POST" || method === "DELETE" || method === "PUT" || method === "PATCH";
+  const isMutating =
+    method === "POST" || method === "DELETE" || method === "PUT" || method === "PATCH";
   if (isMutating) {
     if (!csrfToken) {
       await fetchCsrfToken();
@@ -59,16 +114,31 @@ export async function apiRequest(path, { method = "GET", body, isJson = true } =
     headers["X-CSRFToken"] = csrfToken;
   }
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers,
-    credentials: "include", // sends/receives the session cookie
-    body: body ? (isJson ? JSON.stringify(body) : body) : undefined,
-  });
+  const res = await fetchWithTimeout(
+    `${BASE_URL}${path}`,
+    {
+      method,
+      headers,
+      credentials: "include", // sends/receives the session cookie
+      body: body ? (isJson ? JSON.stringify(body) : body) : undefined,
+    },
+    timeoutMs
+  );
 
-  // 204/empty body responses (e.g. logout, delete) won't have JSON to parse.
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : {};
+  // Empty-body responses (e.g. logout, delete) have no JSON to parse.
+  const data = parseBody(await res.text());
+
+  // A 403 about CSRF usually means our cached token went stale (e.g. the
+  // session changed). Fetch a fresh one and try the request once more.
+  if (
+    res.status === 403 &&
+    isMutating &&
+    !isRetry &&
+    /csrf/i.test(data?.error || data?.detail || "")
+  ) {
+    await fetchCsrfToken();
+    return apiRequest(path, { method, body, isJson, timeoutMs }, true);
+  }
 
   if (res.status === 401 && !AUTH_PATHS.includes(path)) {
     if (unauthorizedHandler) unauthorizedHandler();
